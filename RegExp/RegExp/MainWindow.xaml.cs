@@ -15,22 +15,22 @@ using System.Windows.Shapes;
 
 namespace RegExp
 {
-    /// <summary>
-    /// Логика взаимодействия для MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
+        private string regularExpression;
+        private string inputText;
+
         public MainWindow()
         {
             InitializeComponent();
         }
 
-        private void ValidateValue(object sender, TextCompositionEventArgs e)
+        private void RegExpValidate(object sender, TextCompositionEventArgs e)
         {
 
         }
 
-        private void RegExpValidate(object sender, TextCompositionEventArgs e)
+        private void ChangeValue(object sender, TextChangedEventArgs e)
         {
 
         }
