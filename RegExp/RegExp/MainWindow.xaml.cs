@@ -25,8 +25,11 @@ namespace RegExp
         }
         private string Text
         {
-            get { return InputString.Text; }
-            set { InputString.Text = value; }
+            get { return new TextRange(InputString.Document.ContentStart, InputString.Document.ContentEnd).Text; }
+            set {
+                InputString.Document.Blocks.Clear();
+                InputString.Document.Blocks.Add(new Paragraph(new Run(value)));
+            }
         }
 
         public MainWindow()
