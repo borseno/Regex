@@ -78,8 +78,11 @@ namespace RegExp
                 isBeingChanged = true;
                 foreach (TextRange i in textRanges)
                 {
-                    i.ApplyPropertyValue(TextElement.BackgroundProperty, Brushes.Black);
-                    i.ApplyPropertyValue(TextElement.ForegroundProperty, Brushes.Azure);
+                    if (Regex.IsMatch(i.Text,'^' + RegExpValue + '$'))
+                    {
+                        i.ApplyPropertyValue(TextElement.BackgroundProperty, Brushes.Black);
+                        i.ApplyPropertyValue(TextElement.ForegroundProperty, Brushes.Azure);
+                    }
                 }
                 isBeingChanged = false;
             }
