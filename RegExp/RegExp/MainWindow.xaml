@@ -20,7 +20,7 @@
         </TextBox>
         <TextBlock x:Name="InsertValueDescription" HorizontalAlignment="Left" Margin="300,0,0,0" 
                    TextWrapping="Wrap" Text="Value:" VerticalAlignment="Top" RenderTransformOrigin="5.298,-1.077" Width="201" Height="85" FontSize="72"/>
-        <TextBlock x:Name="RegExp" HorizontalAlignment="Left" Margin="268,175,0,0" 
+        <TextBlock x:Name="RegExp" HorizontalAlignment="Left" Margin="269,191,0,0" 
             TextWrapping="Wrap" Text="RegExp:" VerticalAlignment="Top" RenderTransformOrigin="5.298,-1.077" Width="269" Height="85" FontSize="72"/>
         <TextBox x:Name="InputRegExp" HorizontalAlignment="Left" Height="44" Margin="22,308,0,0" 
             TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="743" RenderTransformOrigin="0.5,0.5" FontSize="24">

@@ -24,5 +24,15 @@ namespace RegExp
         {
             InitializeComponent();
         }
+
+        private void ValidateValue(object sender, TextCompositionEventArgs e)
+        {
+
+        }
+
+        private void RegExpValidate(object sender, TextCompositionEventArgs e)
+        {
+
+        }
     }
 }
