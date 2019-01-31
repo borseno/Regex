@@ -71,14 +71,18 @@ namespace RegExp
                 return;
             }
 
-            if (regex.IsMatch(Text))
+            if (regex.IsMatch(Text.TrimEnd(new[] {'\r', '\n'})))
             {
                 IEnumerable<TextRange> textRanges = GetAllWordRanges(InputString.Document);
 
                 isBeingChanged = true;
                 foreach (TextRange i in textRanges)
                 {
-                    if (Regex.IsMatch(i.Text,'^' + RegExpValue + '$'))
+                    string regExpression = RegExpValue;
+                    regExpression = !regExpression.StartsWith("^") ? '^' + regExpression : regExpression;
+                    regExpression = !regExpression.EndsWith("$") ? regExpression + '$' : regExpression;
+
+                    if (Regex.IsMatch(i.Text,regExpression))
                     {
                         i.ApplyPropertyValue(TextElement.BackgroundProperty, Brushes.Black);
                         i.ApplyPropertyValue(TextElement.ForegroundProperty, Brushes.Azure);
