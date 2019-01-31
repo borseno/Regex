@@ -93,6 +93,10 @@ namespace RegExp
             }
         }
 
+        // TODO: 
+        // Reconstruct this method. Buggy as hell.
+        // Latest bug: the words in a string are splitted by space, can't match the whole string
+        //        bug: e.g ( String: 'Марку 15 лет...,:sf12', Regex: 'Марку 15 лет...,:sf12' )
         private IEnumerable<TextRange> GetAllWordRanges(FlowDocument document)
         {
             string pattern = RegExpValue;
