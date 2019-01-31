@@ -21,10 +21,12 @@ namespace RegExp
         private string RegExpValue
         {
             get { return InputRegExp.Text; }
+            set { InputRegExp.Text = value; }
         }
         private string Text
         {
-            get { return InputRegExp.Text; }
+            get { return InputString.Text; }
+            set { InputString.Text = value; }
         }
 
         public MainWindow()
