@@ -8,7 +8,7 @@
         Title="RegExp processor" Height="450" Width="800">
     <Grid>
         <RichTextBox x:Name="InputString" HorizontalAlignment="Left" Height="44" Margin="22,91,0,0" 
-                  VerticalAlignment="Top" Width="743" RenderTransformOrigin="0.5,0.5" FontSize="24" UndoLimit="200" PreviewTextInput="OnPreviewTextInput">
+                  VerticalAlignment="Top" Width="743" RenderTransformOrigin="0.5,0.5" FontSize="24" UndoLimit="200" TextChanged="OnTextChanged">
             <RichTextBox.RenderTransform>
                 <TransformGroup>
                     <ScaleTransform/>
@@ -22,17 +22,17 @@
                    TextWrapping="Wrap" Text="Value:" VerticalAlignment="Top" RenderTransformOrigin="5.298,-1.077" Width="201" Height="85" FontSize="72"/>
         <TextBlock x:Name="RegExp" HorizontalAlignment="Left" Margin="269,200,0,0" 
             TextWrapping="Wrap" Text="RegExp:" VerticalAlignment="Top" RenderTransformOrigin="5.298,-1.077" Width="269" Height="85" FontSize="72"/>
-        <RichTextBox x:Name="InputRegExp" HorizontalAlignment="Left" Height="44" Margin="22,308,0,0" 
-            VerticalAlignment="Top" Width="743" RenderTransformOrigin="0.5,0.5" FontSize="24" PreviewTextInput="OnPreviewTextInput">
-            <RichTextBox.RenderTransform>
+        <TextBox x:Name="InputRegExp" HorizontalAlignment="Left" Height="44" Margin="22,308,0,0" 
+            VerticalAlignment="Top" Width="743" RenderTransformOrigin="0.5,0.5" FontSize="24" TextChanged="OnTextChanged">
+            <TextBox.RenderTransform>
                 <TransformGroup>
                     <ScaleTransform/>
                     <SkewTransform AngleY="0"/>
                     <RotateTransform Angle="0"/>
                     <TranslateTransform X="0" Y="0"/>
                 </TransformGroup>
-            </RichTextBox.RenderTransform>
-        </RichTextBox>
+            </TextBox.RenderTransform>
+        </TextBox>
 
     </Grid>
 </Window>

@@ -18,18 +18,25 @@ namespace RegExp
 {
     public partial class MainWindow : Window
     {
+        private bool isBeingChanged;
+
         private string RegExpValue
         {
-            get { return new TextRange(InputRegExp.Document.ContentStart, InputRegExp.Document.ContentEnd).Text; }
+            get
+            {
+                return InputRegExp.Text;
+            }
             set
             {
-                InputRegExp.Document.Blocks.Clear();
-                InputRegExp.Document.Blocks.Add(new Paragraph(new Run(value)));
+                InputRegExp.Text = value;
             }
         }
         private string Text
         {
-            get { return new TextRange(InputString.Document.ContentStart, InputString.Document.ContentEnd).Text; }
+            get
+            {
+                return new TextRange(InputString.Document.ContentStart, InputString.Document.ContentEnd).Text;
+            }
             set
             {
                 InputString.Document.Blocks.Clear();
@@ -42,19 +49,22 @@ namespace RegExp
             InitializeComponent();
         }
 
-        private void OnPreviewTextInput(object sender, TextCompositionEventArgs e)
-        {     
-            UpdateValues();
+        private void OnTextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (!isBeingChanged)
+                UpdateValues();
         }
 
         private void UpdateValues()
         {
+             ResetTextProperties();
+
             Regex regex = null;
             try
             {
                 regex = new Regex(RegExpValue);
             }
-            catch (ArgumentException e)
+            catch (ArgumentException)
             {
                 // TODO:
                 // tell the user that regex pattern is wrong
@@ -63,12 +73,55 @@ namespace RegExp
 
             if (regex.IsMatch(Text))
             {
-                foreach (var i in regex.Matches(Text))
+                IEnumerable<TextRange> textRanges = GetAllWordRanges(InputString.Document);
+
+                isBeingChanged = true;
+                foreach (TextRange i in textRanges)
                 {
-                    // TODO:
-                    // highlight the matched substrings
+                    i.ApplyPropertyValue(TextElement.BackgroundProperty, Brushes.Black);
+                    i.ApplyPropertyValue(TextElement.ForegroundProperty, Brushes.Azure);
                 }
+                isBeingChanged = false;
             }
+        }
+
+        private IEnumerable<TextRange> GetAllWordRanges(FlowDocument document)
+        {
+            string pattern = RegExpValue;
+            TextPointer pointer = document.ContentStart;
+            while (pointer != null)
+            {
+                if (pointer.GetPointerContext(LogicalDirection.Forward) == TextPointerContext.Text)
+                {
+                    string textRun = pointer.GetTextInRun(LogicalDirection.Forward);
+                    MatchCollection matches = Regex.Matches(textRun, pattern);
+                    foreach (Match match in matches)
+                    {
+                        int startIndex = match.Index;
+                        int length = match.Length;
+                        TextPointer start = pointer.GetPositionAtOffset(startIndex);
+                        TextPointer end = start.GetPositionAtOffset(length);
+                        yield return new TextRange(start, end);
+                    }
+                }
+
+                pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
+            }
+        }
+
+        private void ResetTextProperties()
+        {
+            isBeingChanged = true;
+
+            TextRange textRange = new TextRange(
+                InputString.Document.ContentStart,
+                InputString.Document.ContentEnd
+            );
+
+            textRange.ApplyPropertyValue(TextElement.BackgroundProperty, Brushes.White);
+            textRange.ApplyPropertyValue(TextElement.ForegroundProperty, Brushes.Black);
+
+            isBeingChanged = false;
         }
     }
 }
