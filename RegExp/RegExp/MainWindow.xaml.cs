@@ -20,13 +20,18 @@ namespace RegExp
     {
         private string RegExpValue
         {
-            get { return InputRegExp.Text; }
-            set { InputRegExp.Text = value; }
+            get { return new TextRange(InputRegExp.Document.ContentStart, InputRegExp.Document.ContentEnd).Text; }
+            set
+            {
+                InputRegExp.Document.Blocks.Clear();
+                InputRegExp.Document.Blocks.Add(new Paragraph(new Run(value)));
+            }
         }
         private string Text
         {
             get { return new TextRange(InputString.Document.ContentStart, InputString.Document.ContentEnd).Text; }
-            set {
+            set
+            {
                 InputString.Document.Blocks.Clear();
                 InputString.Document.Blocks.Add(new Paragraph(new Run(value)));
             }
