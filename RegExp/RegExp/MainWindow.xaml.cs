@@ -12,27 +12,34 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Text.RegularExpressions;
 
 namespace RegExp
 {
     public partial class MainWindow : Window
     {
-        private string regularExpression;
-        private string inputText;
+        private string RegExpValue
+        {
+            get { return InputRegExp.Text; }
+        }
+        private string Text
+        {
+            get { return InputRegExp.Text; }
+        }
 
         public MainWindow()
         {
             InitializeComponent();
         }
 
-        private void RegExpValidate(object sender, TextCompositionEventArgs e)
-        {
-
+        private void OnPreviewTextInput(object sender, TextCompositionEventArgs e)
+        {     
+            UpdateValues();
         }
 
-        private void ChangeValue(object sender, TextChangedEventArgs e)
+        private void UpdateValues()
         {
-
+            
         }
     }
 }
