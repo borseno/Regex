@@ -41,7 +41,26 @@ namespace RegExp
 
         private void UpdateValues()
         {
-            
+            Regex regex = null;
+            try
+            {
+                regex = new Regex(RegExpValue);
+            }
+            catch (ArgumentException e)
+            {
+                // TODO:
+                // tell the user that regex pattern is wrong
+                return;
+            }
+
+            if (regex.IsMatch(Text))
+            {
+                foreach (var i in regex.Matches(Text))
+                {
+                    // TODO:
+                    // highlight the matched substrings
+                }
+            }
         }
     }
 }
