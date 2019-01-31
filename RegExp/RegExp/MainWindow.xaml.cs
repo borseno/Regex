@@ -55,9 +55,10 @@ namespace RegExp
                 UpdateValues();
         }
 
+        #region processing
         private void UpdateValues()
         {
-             ResetTextProperties();
+            ResetTextProperties();
 
             Regex regex = null;
             try
@@ -130,5 +131,6 @@ namespace RegExp
 
             isBeingChanged = false;
         }
+        #endregion
     }
 }
