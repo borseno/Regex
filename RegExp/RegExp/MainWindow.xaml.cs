@@ -64,11 +64,32 @@ namespace RegExp
             try
             {
                 regex = new Regex(RegExpValue);
+                if (InputRegExp.TextDecorations.Count > 0)
+                    InputRegExp.TextDecorations.RemoveAt(0);
             }
             catch (ArgumentException)
             {
-                // TODO:
-                // tell the user that regex pattern is wrong
+                if (InputRegExp.TextDecorations.Count == 0)
+                {
+                    Pen path_pen = new Pen(new SolidColorBrush(Colors.Red), 0.2);
+                    path_pen.EndLineCap = PenLineCap.Square;
+                    path_pen.StartLineCap = PenLineCap.Square;
+
+                    Point path_start = new Point(0, 1);
+                    BezierSegment path_segment = new BezierSegment(new Point(1, 0), new Point(2, 2), new Point(3, 1), true);
+                    PathFigure path_figure = new PathFigure(path_start, new PathSegment[] { path_segment }, false);
+                    PathGeometry path_geometry = new PathGeometry(new PathFigure[] { path_figure });
+
+                    DrawingBrush squiggly_brush = new DrawingBrush();
+                    squiggly_brush.Viewport = new Rect(0, 2.2, 6, 4);
+                    squiggly_brush.ViewportUnits = BrushMappingMode.Absolute;
+                    squiggly_brush.TileMode = TileMode.Tile;
+                    squiggly_brush.Drawing = new GeometryDrawing(null, path_pen, path_geometry);
+
+                    TextDecoration squiggly = new TextDecoration();
+                    squiggly.Pen = new Pen(squiggly_brush, 2.6);
+                    InputRegExp.TextDecorations.Add(squiggly);
+                }
                 return;
             }
 
