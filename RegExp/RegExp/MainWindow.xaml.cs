@@ -59,41 +59,20 @@ namespace RegExp
         private void UpdateValues()
         {
             ResetTextProperties();
+            ResetRegexProperties();
 
             Regex regex = null;
             try
             {
                 regex = new Regex(RegExpValue);
-                if (InputRegExp.TextDecorations.Count > 0)
-                    InputRegExp.TextDecorations.RemoveAt(0);
             }
             catch (ArgumentException)
             {
-                if (InputRegExp.TextDecorations.Count == 0)
-                {
-                    Pen path_pen = new Pen(new SolidColorBrush(Colors.Red), 0.2);
-                    path_pen.EndLineCap = PenLineCap.Square;
-                    path_pen.StartLineCap = PenLineCap.Square;
-
-                    Point path_start = new Point(0, 1);
-                    BezierSegment path_segment = new BezierSegment(new Point(1, 0), new Point(2, 2), new Point(3, 1), true);
-                    PathFigure path_figure = new PathFigure(path_start, new PathSegment[] { path_segment }, false);
-                    PathGeometry path_geometry = new PathGeometry(new PathFigure[] { path_figure });
-
-                    DrawingBrush squiggly_brush = new DrawingBrush();
-                    squiggly_brush.Viewport = new Rect(0, 2.2, 6, 4);
-                    squiggly_brush.ViewportUnits = BrushMappingMode.Absolute;
-                    squiggly_brush.TileMode = TileMode.Tile;
-                    squiggly_brush.Drawing = new GeometryDrawing(null, path_pen, path_geometry);
-
-                    TextDecoration squiggly = new TextDecoration();
-                    squiggly.Pen = new Pen(squiggly_brush, 2.6);
-                    InputRegExp.TextDecorations.Add(squiggly);
-                }
+                RedCurvyUnderline();
                 return;
             }
 
-            if (regex.IsMatch(Text.TrimEnd(new[] {'\r', '\n'})))
+            if (regex.IsMatch(Text.TrimEnd(new[] { '\r', '\n' })))
             {
                 IEnumerable<TextRange> textRanges = GetAllWordRanges(InputString.Document);
 
@@ -104,7 +83,7 @@ namespace RegExp
                     regExpression = !regExpression.StartsWith("^") ? '^' + regExpression : regExpression;
                     regExpression = !regExpression.EndsWith("$") ? regExpression + '$' : regExpression;
 
-                    if (Regex.IsMatch(i.Text,regExpression))
+                    if (Regex.IsMatch(i.Text, regExpression))
                     {
                         i.ApplyPropertyValue(TextElement.BackgroundProperty, Brushes.Black);
                         i.ApplyPropertyValue(TextElement.ForegroundProperty, Brushes.Azure);
@@ -116,7 +95,7 @@ namespace RegExp
 
         // TODO: 
         // Reconstruct this method. Buggy as hell.
-        // Latest bug: the words in a string are splitted by space, can't match the whole string
+        // Latest bug: the words in a string are split by space, can't match the whole string
         //        bug: e.g ( String: 'Марку 15 лет...,:sf12', Regex: 'Марку 15 лет...,:sf12' )
         private IEnumerable<TextRange> GetAllWordRanges(FlowDocument document)
         {
@@ -137,7 +116,6 @@ namespace RegExp
                         yield return new TextRange(start, end);
                     }
                 }
-
                 pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
             }
         }
@@ -156,7 +134,45 @@ namespace RegExp
 
             isBeingChanged = false;
         }
-        //useless Commnent
+
+        private void ResetRegexProperties()
+        {
+            isBeingChanged = true;
+
+            for (int i = 0; i < InputRegExp.TextDecorations.Count; i++)
+            {
+                InputRegExp.TextDecorations.RemoveAt(i);
+            }
+
+            isBeingChanged = false;
+        }
+
+
+        private void RedCurvyUnderline()
+        {
+            isBeingChanged = true;
+
+            Pen path_pen = new Pen(new SolidColorBrush(Colors.Red), 0.2);
+            path_pen.EndLineCap = PenLineCap.Square;
+            path_pen.StartLineCap = PenLineCap.Square;
+
+            Point path_start = new Point(0, 1);
+            BezierSegment path_segment = new BezierSegment(new Point(1, 0), new Point(2, 2), new Point(3, 1), true);
+            PathFigure path_figure = new PathFigure(path_start, new PathSegment[] { path_segment }, false);
+            PathGeometry path_geometry = new PathGeometry(new PathFigure[] { path_figure });
+
+            DrawingBrush squiggly_brush = new DrawingBrush();
+            squiggly_brush.Viewport = new Rect(0, 2.2, 6, 4);
+            squiggly_brush.ViewportUnits = BrushMappingMode.Absolute;
+            squiggly_brush.TileMode = TileMode.Tile;
+            squiggly_brush.Drawing = new GeometryDrawing(null, path_pen, path_geometry);
+
+            TextDecoration squiggly = new TextDecoration();
+            squiggly.Pen = new Pen(squiggly_brush, 2.6);
+            InputRegExp.TextDecorations.Add(squiggly);
+
+            isBeingChanged = false;
+        }
         #endregion
     }
 }
