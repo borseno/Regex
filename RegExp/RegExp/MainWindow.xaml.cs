@@ -76,20 +76,7 @@ namespace RegExp
             {
                 IEnumerable<TextRange> textRanges = GetAllWordRanges(InputString.Document);
 
-                isBeingChanged = true;
-                foreach (TextRange i in textRanges)
-                {
-                    string regExpression = RegExpValue;
-                    regExpression = !regExpression.StartsWith("^") ? '^' + regExpression : regExpression;
-                    regExpression = !regExpression.EndsWith("$") ? regExpression + '$' : regExpression;
-
-                    if (Regex.IsMatch(i.Text, regExpression))
-                    {
-                        i.ApplyPropertyValue(TextElement.BackgroundProperty, Brushes.Black);
-                        i.ApplyPropertyValue(TextElement.ForegroundProperty, Brushes.Azure);
-                    }
-                }
-                isBeingChanged = false;
+                HighlightTextRanges(textRanges);
             }
         }
 
@@ -147,6 +134,25 @@ namespace RegExp
             isBeingChanged = false;
         }
 
+        // TODO: If 2 matches lie next to each other (e.g 'ab' where regex = "[ab]",
+        // TODO: then highlight them with different colors.
+        private void HighlightTextRanges(IEnumerable<TextRange> textRanges)
+        {
+            isBeingChanged = true;
+            foreach (TextRange i in textRanges)
+            {
+                string regExpression = RegExpValue;
+                regExpression = !regExpression.StartsWith("^") ? '^' + regExpression : regExpression;
+                regExpression = !regExpression.EndsWith("$") ? regExpression + '$' : regExpression;
+
+                if (Regex.IsMatch(i.Text, regExpression))
+                {
+                    i.ApplyPropertyValue(TextElement.BackgroundProperty, Brushes.Black);
+                    i.ApplyPropertyValue(TextElement.ForegroundProperty, Brushes.Azure);
+                }
+            }
+            isBeingChanged = false;
+        }
 
         private void RedCurvyUnderline()
         {
