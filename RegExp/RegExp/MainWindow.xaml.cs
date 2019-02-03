@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Text.RegularExpressions;
+using Data_Structures;
 
 namespace RegExp
 {
@@ -137,6 +138,12 @@ namespace RegExp
         private void HighlightTextRanges(IEnumerable<TextRange> textRanges)
         {
             isBeingChanged = true;
+            
+            // TODO: Implement this.
+            CircularArray<Brush> circularArr = new CircularArray<Brush>(new Brush[] {Brushes.Black, Brushes.Azure});
+
+            int index = 0;
+
             foreach (TextRange i in textRanges)
             {
                 string regExpression = RegExpValue;
