@@ -6,126 +6,133 @@ namespace Data_Structures
 {
     public class CircularArray<T> : ICloneable, IList<T>, IStructuralComparable, IStructuralEquatable
     {
-        private T[] data;
-        private int begginingMod;
-
-        int ICollection<T>.Count => throw new NotImplementedException();
-
-        bool ICollection<T>.IsReadOnly => throw new NotImplementedException();
-
-        T IList<T>.this[int index] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        private T[] _data;
+        private readonly int _beginningMod;
 
         public T this[int index]
         {
-            get // 10 % 10 == 10
+            get // 
             {
-                return data[index % begginingMod];
+                return _data[index % _beginningMod];
             }
             set
             {
-                data[index % begginingMod] = value;
+                _data[index % _beginningMod] = value;
             }
         }
 
-        public CircularArray()
+        public CircularArray(int length)
         {
-            data = null;
-            begginingMod = 0;
+            _data = new T[length];
+            _beginningMod = _data.Length;
         }
 
         public CircularArray(T[] data)
         {
-            this.data = data;
-            begginingMod = data.Length + 1;
+            this._data = data;
+            _beginningMod = data.Length;
         }
 
         public int GetHashCode(IEqualityComparer i)
         {
-            return data.GetHashCode();
+            return _data.GetHashCode();
         }
 
         public bool Equals(object obj, IEqualityComparer IEC)
         {
-            return data.Equals(obj);
+            return _data.Equals(obj);
         }
 
         public object Clone()
         {
-            T[] newData = (T[])data.Clone();
+            T[] newData = (T[])_data.Clone();
 
             return new CircularArray<T>(newData);
         }
 
-        public void Add(T value)
-        {
-            int lastIndex = Array.FindIndex(data, t => t == null);
-
-            if (lastIndex != -1)
-                data[lastIndex] = value;
-        }
-
         public void Clear()
         {
-            
+            for (int i = 0; i < _data.Length; i++)
+            {
+                _data[i] = default(T);
+            }
         }
 
-        int IList<T>.IndexOf(T item)
-        {
-            for (int i = 0; i < data.Length; i++)
-                if (data[i].Equals(item))
+        public int IndexOf(T item)
+        {   
+            for (int i = 0; i < _data.Length; i++)
+                if (_data[i].Equals(item))
                     return i;
 
             return -1;
         }
 
-        void IList<T>.Insert(int index, T item)
+        public bool Contains(T item)
         {
-            throw new NotImplementedException();
+            foreach (var i in _data)
+                if (i.Equals(item))
+                    return true;
+            return false;
         }
 
-        void IList<T>.RemoveAt(int index)
+        public void CopyTo(T[] array, int arrayIndex)
         {
-            throw new NotImplementedException();
+            int i = 0;
+            for (; arrayIndex < array.Length && i < _data.Length; ++arrayIndex)
+            {
+                array[arrayIndex] = _data[i++];
+            }
         }
 
-        void ICollection<T>.Add(T item)
+        public IEnumerator<T> GetEnumerator()
         {
-            throw new NotImplementedException();
-        }
-
-        void ICollection<T>.Clear()
-        {
-            throw new NotImplementedException();
-        }
-
-        bool ICollection<T>.Contains(T item)
-        {
-            throw new NotImplementedException();
-        }
-
-        void ICollection<T>.CopyTo(T[] array, int arrayIndex)
-        {
-            throw new NotImplementedException();
-        }
-
-        bool ICollection<T>.Remove(T item)
-        {
-            throw new NotImplementedException();
-        }
-
-        IEnumerator<T> IEnumerable<T>.GetEnumerator()
-        {
-            throw new NotImplementedException();
+            for (int i = 0; i < _data.Length; i++)
+            {
+                yield return _data[i];
+            }
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            throw new NotImplementedException();
+            for (int i = 0; i < _data.Length; i++)
+            {
+                yield return _data[i];
+            }
         }
 
-        public int CompareTo(object a, IComparer comparer)
+        bool ICollection<T>.IsReadOnly
         {
-            throw new NotImplementedException();
+            get { return false; }
+        }
+
+        void IList<T>.Insert(int index, T item)
+        {
+            throw new NotSupportedException();
+        }
+
+        int ICollection<T>.Count
+        {
+            get { throw new NotSupportedException(); }
+        }
+
+        void IList<T>.RemoveAt(int index)
+        {
+            throw new NotSupportedException();
+        }
+
+        void ICollection<T>.Add(T item)
+        {
+            throw new NotSupportedException();
+        }
+
+        bool ICollection<T>.Remove(T item)
+        {
+            throw new NotSupportedException();
+        }
+
+        int IStructuralComparable.CompareTo(object a, IComparer comparer)
+        {
+            throw new NotSupportedException();
         }
     }
 }

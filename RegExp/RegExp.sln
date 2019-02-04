@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RegExp", "RegExp\RegExp.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Data_Structures", "Data_Structures\Data_Structures.csproj", "{30BC67B6-FCE8-4CB9-B18B-2F84EEE5ECD9}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Data Structures", "Data Structures", "{01CCD4FA-711D-461C-A692-16562160EF73}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "App", "App", "{45765DBA-A106-41C5-928B-D40CE20DBBBA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,6 +28,10 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{E7B0857B-EA09-4719-9100-220294A62916} = {45765DBA-A106-41C5-928B-D40CE20DBBBA}
+		{30BC67B6-FCE8-4CB9-B18B-2F84EEE5ECD9} = {01CCD4FA-711D-461C-A692-16562160EF73}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {34CB2CC2-C86D-4D5A-899F-07D809FA5CB0}
