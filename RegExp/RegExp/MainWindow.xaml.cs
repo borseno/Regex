@@ -20,7 +20,9 @@ namespace RegExp
 {
     public partial class MainWindow : Window
     {
-        private bool isBeingChanged;
+        private readonly DocumentOccurrencesProcessor _occurrencesProcessor;
+        private readonly RegexTextProcessor _regexProcessor;
+        private bool _isBeingChanged;
 
         private string RegExpValue => InputRegExp.Text;
 
@@ -29,17 +31,21 @@ namespace RegExp
         public MainWindow()
         {
             InitializeComponent();
+            _occurrencesProcessor = new DocumentOccurrencesProcessor(InputString.Document);
+            _regexProcessor = new RegexTextProcessor(InputRegExp, Colors.Red);
         }
 
         private void OnTextChanged(object sender, TextChangedEventArgs e)
         {
-            if (!isBeingChanged)
+            if (!_isBeingChanged)
                 UpdateValues();
         }
 
         #region processing
         private void UpdateValues()
         {
+            _isBeingChanged = true;
+
             ResetTextProperties();
             ResetRegexProperties();
 
@@ -53,53 +59,18 @@ namespace RegExp
             }
             catch (ArgumentException)
             {
-                RedCurvyUnderline();
+                _regexProcessor.AddCurvyUnderline();
                 return;
             }
 
-            IEnumerable<TextRange> textRanges;
+            _occurrencesProcessor.GetOccurrencesRanges(regex);
+            _occurrencesProcessor.Highlight(Brushes.Black, Brushes.DimGray, Brushes.Gray, Brushes.LightGray);
 
-            if (RegExpValue.EndsWith("$") &&
-                    RegExpValue.StartsWith("^") &&
-                    RegExpValue.Trim('^', '$') == Text.RemoveAll('\r', '\n') ||
-                    RegExpValue == Text.RemoveAll('\r', '\n'))
-                textRanges = new List<TextRange> { new TextRange(InputString.Document.ContentStart, InputString.Document.ContentEnd) };
-            else
-                textRanges = GetAllWordRanges();
-
-            HighlightTextRanges(textRanges);
-        }
-
-        public IEnumerable<TextRange> GetAllWordRanges()
-        {
-            FlowDocument document = InputString.Document;
-            string pattern = RegExpValue;
-
-            TextPointer pointer = document.ContentStart;
-            while (pointer != null)
-            {
-                if (pointer.GetPointerContext(LogicalDirection.Forward) == TextPointerContext.Text)
-                {
-                    string textRun = pointer.GetTextInRun(LogicalDirection.Forward);
-                    MatchCollection matches = Regex.Matches(textRun, pattern);
-                    foreach (Match match in matches)
-                    {
-                        int startIndex = match.Index;
-                        int length = match.Length;
-                        TextPointer start = pointer.GetPositionAtOffset(startIndex);
-                        TextPointer end = start.GetPositionAtOffset(length);
-                        yield return new TextRange(start, end);
-                    }
-                }
-
-                pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
-            }
+            _isBeingChanged = false;
         }
 
         private void ResetTextProperties()
         {
-            isBeingChanged = true;
-
             TextRange textRange = new TextRange(
                 InputString.Document.ContentStart,
                 InputString.Document.ContentEnd
@@ -107,76 +78,11 @@ namespace RegExp
 
             textRange.ApplyPropertyValue(TextElement.BackgroundProperty, Brushes.White);
             textRange.ApplyPropertyValue(TextElement.ForegroundProperty, Brushes.Black);
-
-            isBeingChanged = false;
         }
 
         private void ResetRegexProperties()
         {
-            isBeingChanged = true;
-
             InputRegExp.TextDecorations.Clear();
-
-            isBeingChanged = false;
-        }
-
-        private void HighlightTextRanges(IEnumerable<TextRange> textRanges)
-        {
-            isBeingChanged = true;
-
-            var textRangesArray = textRanges.ToArray();
-
-            CircularArray<Brush> backgroundValues = new CircularArray<Brush>(new Brush[] { Brushes.Black, Brushes.Gray });
-
-            int index = 0;
-
-            foreach (TextRange i in textRangesArray)
-            {
-                string regExpression = RegExpValue;
-
-                regExpression = !regExpression.StartsWith("^") ? '^' + regExpression : regExpression;
-                regExpression = !regExpression.EndsWith("$") ? regExpression + '$' : regExpression;
-
-                if (Regex.IsMatch(i.Text, regExpression))
-                {
-                    i.ApplyPropertyValue(TextElement.BackgroundProperty, backgroundValues[index++]);
-                    i.ApplyPropertyValue(TextElement.ForegroundProperty, Brushes.Azure);
-                }
-            }
-
-            isBeingChanged = false;
-        }
-
-        private void RedCurvyUnderline()
-        {
-            isBeingChanged = true;
-
-            Pen path_pen = new Pen(new SolidColorBrush(Colors.Red), 0.2)
-            {
-                EndLineCap = PenLineCap.Square,
-                StartLineCap = PenLineCap.Square
-            };
-
-            Point path_start = new Point(0, 1);
-            BezierSegment path_segment = new BezierSegment(new Point(1, 0), new Point(2, 2), new Point(3, 1), true);
-            PathFigure path_figure = new PathFigure(path_start, new PathSegment[] { path_segment }, false);
-            PathGeometry path_geometry = new PathGeometry(new PathFigure[] { path_figure });
-
-            DrawingBrush squiggly_brush = new DrawingBrush
-            {
-                Viewport = new Rect(0, 2.2, 6, 4),
-                ViewportUnits = BrushMappingMode.Absolute,
-                TileMode = TileMode.Tile,
-                Drawing = new GeometryDrawing(null, path_pen, path_geometry)
-            };
-
-            TextDecoration squiggly = new TextDecoration
-            {
-                Pen = new Pen(squiggly_brush, 2.6)
-            };
-            InputRegExp.TextDecorations.Add(squiggly);
-
-            isBeingChanged = false;
         }
         #endregion
     }
