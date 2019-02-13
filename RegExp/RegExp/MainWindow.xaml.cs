@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,29 +22,9 @@ namespace RegExp
     {
         private bool isBeingChanged;
 
-        private string RegExpValue
-        {
-            get
-            {
-                return InputRegExp.Text;
-            }
-            set
-            {
-                InputRegExp.Text = value;
-            }
-        }
-        private string Text
-        {
-            get
-            {
-                return new TextRange(InputString.Document.ContentStart, InputString.Document.ContentEnd).Text;
-            }
-            set
-            {
-                InputString.Document.Blocks.Clear();
-                InputString.Document.Blocks.Add(new Paragraph(new Run(value)));
-            }
-        }
+        private string RegExpValue => InputRegExp.Text;
+
+        private string Text => new TextRange(InputString.Document.ContentStart, InputString.Document.ContentEnd).Text;
 
         public MainWindow()
         {
@@ -76,48 +57,43 @@ namespace RegExp
                 return;
             }
 
-            if (regex.IsMatch(Text.TrimEnd(new[] { '\r', '\n' })))
-            {
-                IEnumerable<TextRange> textRanges = GetAllWordRanges(InputString);
+            IEnumerable<TextRange> textRanges;
 
-                if (!textRanges.Any())
-                    textRanges = new List<TextRange> { new TextRange(InputString.Document.ContentStart, InputString.Document.ContentEnd) };
+            if (RegExpValue.EndsWith("$") &&
+                    RegExpValue.StartsWith("^") &&
+                    RegExpValue.Trim('^', '$') == Text.RemoveAll('\r', '\n') ||
+                    RegExpValue == Text.RemoveAll('\r', '\n'))
+                textRanges = new List<TextRange> { new TextRange(InputString.Document.ContentStart, InputString.Document.ContentEnd) };
+            else
+                textRanges = GetAllWordRanges();
 
-                HighlightTextRanges(textRanges);
-            }
+            HighlightTextRanges(textRanges);
         }
 
-        private IEnumerable<TextRange> GetAllWordRanges(RichTextBox richTextBox)
+        public IEnumerable<TextRange> GetAllWordRanges()
         {
+            FlowDocument document = InputString.Document;
             string pattern = RegExpValue;
 
-            Match[] matches = Regex.Matches(Text.TrimEnd('\r', '\n'), pattern).Cast<Match>().ToArray();
-
-            TextRange textRange = new TextRange(richTextBox.Document.ContentStart, richTextBox.Document.ContentEnd);
-
-            for (int i = 0; i < matches.Length; i++)
+            TextPointer pointer = document.ContentStart;
+            while (pointer != null)
             {
-                int startIndex = matches[i].Index;
-                int length = matches[i].Length;
+                if (pointer.GetPointerContext(LogicalDirection.Forward) == TextPointerContext.Text)
+                {
+                    string textRun = pointer.GetTextInRun(LogicalDirection.Forward);
+                    MatchCollection matches = Regex.Matches(textRun, pattern);
+                    foreach (Match match in matches)
+                    {
+                        int startIndex = match.Index;
+                        int length = match.Length;
+                        TextPointer start = pointer.GetPositionAtOffset(startIndex);
+                        TextPointer end = start.GetPositionAtOffset(length);
+                        yield return new TextRange(start, end);
+                    }
+                }
 
-                TextRange subRange = Select(richTextBox, startIndex, length);
-
-                yield return subRange;
+                pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
             }
-        }
-
-        private TextRange Select(RichTextBox rtb, int index, int length)
-        {
-            TextRange textRange = new TextRange(rtb.Document.ContentStart, rtb.Document.ContentEnd);
-
-            if (textRange.Text.TrimEnd('\r', '\n').Length >= (index + length))
-            {
-                TextPointer start = textRange.Start.GetPositionAtOffset(index, LogicalDirection.Forward);
-                TextPointer end = textRange.Start.GetPositionAtOffset(index + length, LogicalDirection.Backward);
-
-                return new TextRange(start, end);
-            }
-            return textRange;
         }
 
         private void ResetTextProperties()
@@ -139,38 +115,35 @@ namespace RegExp
         {
             isBeingChanged = true;
 
-            for (int i = 0; i < InputRegExp.TextDecorations.Count; i++)
-            {
-                InputRegExp.TextDecorations.RemoveAt(i);
-            }
+            InputRegExp.TextDecorations.Clear();
 
             isBeingChanged = false;
         }
 
-        // TODO: If 2 matches lie next to each other (e.g 'ab' where regex = "[ab]",
-        // TODO: then highlight them with different colors.
         private void HighlightTextRanges(IEnumerable<TextRange> textRanges)
         {
-            var textRangesArray = textRanges.ToArray();
             isBeingChanged = true;
-            
-            // TODO: Implement this.
-            CircularArray<Brush> backgroundValues = new CircularArray<Brush>(new Brush[] {Brushes.Black, Brushes.Gray});
-            
+
+            var textRangesArray = textRanges.ToArray();
+
+            CircularArray<Brush> backgroundValues = new CircularArray<Brush>(new Brush[] { Brushes.Black, Brushes.Gray });
+
             int index = 0;
 
             foreach (TextRange i in textRangesArray)
             {
                 string regExpression = RegExpValue;
+
                 regExpression = !regExpression.StartsWith("^") ? '^' + regExpression : regExpression;
                 regExpression = !regExpression.EndsWith("$") ? regExpression + '$' : regExpression;
 
-                if (Regex.IsMatch(i.Text.TrimEnd('\r', '\n'), regExpression))
+                if (Regex.IsMatch(i.Text, regExpression))
                 {
                     i.ApplyPropertyValue(TextElement.BackgroundProperty, backgroundValues[index++]);
                     i.ApplyPropertyValue(TextElement.ForegroundProperty, Brushes.Azure);
                 }
             }
+
             isBeingChanged = false;
         }
 

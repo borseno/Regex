@@ -7,8 +7,8 @@
         mc:Ignorable="d"
         Title="RegExp processor" Height="450" Width="800">
     <Grid>
-        <RichTextBox x:Name="InputString" HorizontalAlignment="Left" Height="44" Margin="22,91,0,0" 
-                  VerticalAlignment="Top" Width="743" RenderTransformOrigin="0.5,0.5" FontSize="24" UndoLimit="200" TextChanged="OnTextChanged">
+        <RichTextBox x:Name="InputString" HorizontalAlignment="Left" Height="245" Margin="22,134,0,0" 
+                  VerticalAlignment="Top" Width="743" RenderTransformOrigin="0.5,0.5" FontSize="16" UndoLimit="200" TextChanged="OnTextChanged" VerticalScrollBarVisibility="Auto">
             <RichTextBox.RenderTransform>
                 <TransformGroup>
                     <ScaleTransform/>
@@ -18,12 +18,12 @@
                 </TransformGroup>
             </RichTextBox.RenderTransform>
         </RichTextBox>
-        <TextBlock x:Name="InsertValueDescription" HorizontalAlignment="Left" Margin="300,0,0,0" 
-                   TextWrapping="Wrap" Text="Value:" VerticalAlignment="Top" RenderTransformOrigin="5.298,-1.077" Width="201" Height="85" FontSize="72"/>
-        <TextBlock x:Name="RegExp" HorizontalAlignment="Left" Margin="269,200,0,0" 
-            TextWrapping="Wrap" Text="RegExp:" VerticalAlignment="Top" RenderTransformOrigin="5.298,-1.077" Width="269" Height="85" FontSize="72"/>
-        <TextBox x:Name="InputRegExp" HorizontalAlignment="Left" Height="44" Margin="22,308,0,0" 
-            VerticalAlignment="Top" Width="743" RenderTransformOrigin="0.5,0.5" FontSize="24" TextChanged="OnTextChanged">
+        <TextBlock x:Name="InsertValueDescription" HorizontalAlignment="Left" Margin="358,95,0,0" 
+                   TextWrapping="Wrap" Text="Text" VerticalAlignment="Top" RenderTransformOrigin="5.298,-1.077" Width="50" Height="34" FontSize="24"/>
+        <TextBlock x:Name="RegExp" HorizontalAlignment="Left" Margin="282,10,0,0" 
+            TextWrapping="Wrap" Text="Regular expression" VerticalAlignment="Top" RenderTransformOrigin="5.298,-1.077" Width="201" Height="32" FontSize="24"/>
+        <TextBox x:Name="InputRegExp" HorizontalAlignment="Left" Height="34" Margin="22,56,0,0" 
+            VerticalAlignment="Top" Width="743" RenderTransformOrigin="0.5,0.5" FontSize="18" TextChanged="OnTextChanged" AcceptsTab="True" HorizontalScrollBarVisibility="Auto">
             <TextBox.RenderTransform>
                 <TransformGroup>
                     <ScaleTransform/>
