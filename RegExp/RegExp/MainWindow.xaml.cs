@@ -20,7 +20,7 @@ namespace RegExp
 {
     public partial class MainWindow : Window
     {
-        private readonly DocumentOccurrencesProcessor _occurrencesProcessor;
+        private readonly DocumentOccurrencesProcessor1 _occurrencesProcessor;
         private readonly RegexTextProcessor _regexProcessor;
         private bool _isBeingChanged;
 
@@ -31,7 +31,7 @@ namespace RegExp
         public MainWindow()
         {
             InitializeComponent();
-            _occurrencesProcessor = new DocumentOccurrencesProcessor(InputString.Document);
+            _occurrencesProcessor = new DocumentOccurrencesProcessor1(InputString.Document, Brushes.White, Brushes.Black);
             _regexProcessor = new RegexTextProcessor(InputRegExp, Colors.Red);
         }
 
@@ -46,7 +46,7 @@ namespace RegExp
         {
             _isBeingChanged = true;
 
-            ResetTextProperties();
+            _occurrencesProcessor.ResetTextProperties();
             ResetRegexProperties();
 
             if (String.IsNullOrEmpty(RegExpValue))
@@ -67,17 +67,6 @@ namespace RegExp
             _occurrencesProcessor.Highlight(Brushes.Black, Brushes.DimGray, Brushes.Gray, Brushes.LightGray);
 
             _isBeingChanged = false;
-        }
-
-        private void ResetTextProperties()
-        {
-            TextRange textRange = new TextRange(
-                InputString.Document.ContentStart,
-                InputString.Document.ContentEnd
-            );
-
-            textRange.ApplyPropertyValue(TextElement.BackgroundProperty, Brushes.White);
-            textRange.ApplyPropertyValue(TextElement.ForegroundProperty, Brushes.Black);
         }
 
         private void ResetRegexProperties()

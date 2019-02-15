@@ -55,6 +55,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="DocumentOccurrencesProcessor1.cs" />
     <Compile Include="DocumentOccurrencesProcessor.cs" />
     <Compile Include="RegexTextProcessor.cs" />
     <Compile Include="StringExtension.cs" />
