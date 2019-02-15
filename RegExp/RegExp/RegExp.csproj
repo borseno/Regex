@@ -58,6 +58,7 @@
     <Compile Include="DocumentOccurrencesProcessor1.cs" />
     <Compile Include="DocumentOccurrencesProcessor.cs" />
     <Compile Include="RegexTextProcessor.cs" />
+    <Compile Include="RegexTextProcessor1.cs" />
     <Compile Include="StringExtension.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
