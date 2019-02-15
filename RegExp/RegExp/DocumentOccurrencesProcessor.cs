@@ -13,96 +13,34 @@ namespace RegExp
 {
     class DocumentOccurrencesProcessor
     {
-        private List<TextRange> _textRanges;
+        private readonly DocumentOccurrencesFinder _finder;
+        private readonly DocumentOccurrencesHighlighter _highlighter;
+        private IEnumerable<TextRange> _textRanges;
         private Regex _currentRegex;
 
         public FlowDocument FlowDocument { get; }
  
-        public DocumentOccurrencesProcessor(FlowDocument flowDocument)
+        public DocumentOccurrencesProcessor(FlowDocument flowDocument, Brush defaultBackGround, Brush defaultForeGround)
         {
+            _finder = new DocumentOccurrencesFinder();
+            _highlighter = new DocumentOccurrencesHighlighter(flowDocument, defaultBackGround, defaultForeGround);
             FlowDocument = flowDocument;
         }
 
         public IEnumerable<TextRange> GetOccurrencesRanges(Regex regex)
         {
-            if (regex != null)
-            {
-                List<TextRange> result = new List<TextRange>();
-
-                _textRanges = new List<TextRange>(32);
-                _currentRegex = regex;
-
-                if (CheckIfMatchesWholeString())
-                {
-                    _textRanges.Add(new TextRange(FlowDocument.ContentStart, FlowDocument.ContentEnd));
-                    return _textRanges;
-                }
-
-                TextPointer pointer = FlowDocument.ContentStart;
-
-                while (pointer != null)
-                {
-                    if (pointer.GetPointerContext(LogicalDirection.Forward) == TextPointerContext.Text)
-                    {
-                        string textRun = pointer.GetTextInRun(LogicalDirection.Forward);
-                        MatchCollection matches = regex.Matches(textRun);
-                        foreach (Match match in matches)
-                        {
-                            int startIndex = match.Index;
-                            int length = match.Length;
-                            TextPointer start = pointer.GetPositionAtOffset(startIndex);
-                            TextPointer end = start?.GetPositionAtOffset(length);
-
-                            TextRange textRange = new TextRange(start, end);
-
-                            _textRanges.Add(textRange);
-                        }
-                    }
-
-                    pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
-                }
-
-                return _textRanges;
-            }
-
-            return null;
+            _currentRegex = regex;
+            return _textRanges = _finder.GetOccurrencesRanges(FlowDocument, regex);
         }
 
-        // TODO: Split into multiple tasks.
-        public void Highlight(params Brush[] brushes)
+        public void Highlight(Brush foreGround, params Brush[] brushes)
         {
-            if (_textRanges?.Count > 0)
-            {
-                var textRangesArray = _textRanges.ToArray();
-
-                CircularArray<Brush> backgroundValues = new CircularArray<Brush>(brushes);
-                int index = 0;
-
-                foreach (TextRange i in textRangesArray)
-                {
-                    string regExpression = _currentRegex.ToString();
-
-                    regExpression = !regExpression.StartsWith("^") ? '^' + regExpression : regExpression;
-                    regExpression = !regExpression.EndsWith("$") ? regExpression + '$' : regExpression;
-
-                    if (Regex.IsMatch(i.Text.RemoveAll('\r', '\n'), regExpression))
-                    {
-                        i.ApplyPropertyValue(TextElement.BackgroundProperty, backgroundValues[index++]);
-                        i.ApplyPropertyValue(TextElement.ForegroundProperty, Brushes.Azure);
-                    }
-                }
-            }
+            _highlighter.Highlight(_textRanges, _currentRegex, foreGround, brushes);
         }
 
-        private bool CheckIfMatchesWholeString()
+        public void ResetTextProperties()
         {
-            string regexValue = _currentRegex.ToString();
-            string text = new TextRange(FlowDocument.ContentStart, FlowDocument.ContentEnd).Text;
-
-            return regexValue.EndsWith("$") &&
-                regexValue.StartsWith("^") &&
-                regexValue.Trim('^', '$') == text.RemoveAll('\r', '\n') ||
-                regexValue == text.RemoveAll('\r', '\n');
+            _highlighter.ResetTextProperties();
         }
     }
 }

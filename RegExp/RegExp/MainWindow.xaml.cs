@@ -20,7 +20,7 @@ namespace RegExp
 {
     public partial class MainWindow : Window
     {
-        private readonly DocumentOccurrencesProcessor1 _occurrencesProcessor;
+        private readonly DocumentOccurrencesProcessor _occurrencesProcessor;
         private readonly RegexTextProcessor1 _regexProcessor;
         private bool _isBeingChanged;
 
@@ -31,7 +31,7 @@ namespace RegExp
         public MainWindow()
         {
             InitializeComponent();
-            _occurrencesProcessor = new DocumentOccurrencesProcessor1(InputString.Document, Brushes.White, Brushes.Black);
+            _occurrencesProcessor = new DocumentOccurrencesProcessor(InputString.Document, Brushes.White, Brushes.Black);
             _regexProcessor = new RegexTextProcessor1(InputRegExp, Colors.Red);
         }
 
@@ -64,7 +64,7 @@ namespace RegExp
             }
 
             _occurrencesProcessor.GetOccurrencesRanges(regex);
-            _occurrencesProcessor.Highlight(Brushes.Black, Brushes.DimGray, Brushes.Gray, Brushes.LightGray);
+            _occurrencesProcessor.Highlight(Brushes.Azure, Brushes.Black, Brushes.DimGray, Brushes.Gray, Brushes.LightGray);
 
             _isBeingChanged = false;
         }
