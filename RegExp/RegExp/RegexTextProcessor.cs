@@ -11,7 +11,7 @@ using System.Windows.Media;
 
 namespace RegExp
 {
-    class RegexTextProcessor : ITextBoxProcessor
+    class RegexTextProcessor
     {
         public Color Color { get; }
 

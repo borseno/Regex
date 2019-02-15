@@ -11,7 +11,7 @@ using Data_Structures;
 
 namespace RegExp
 {
-    class DocumentOccurrencesProcessor : IFlowDocumentProcessor
+    class DocumentOccurrencesProcessor
     {
         private List<TextRange> _textRanges;
         private Regex _currentRegex;

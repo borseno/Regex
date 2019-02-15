@@ -55,9 +55,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="IFlowDocumentProcessor.cs" />
     <Compile Include="DocumentOccurrencesProcessor.cs" />
-    <Compile Include="ITextBoxProcessor.cs" />
     <Compile Include="RegexTextProcessor.cs" />
     <Compile Include="StringExtension.cs" />
     <Page Include="MainWindow.xaml">
