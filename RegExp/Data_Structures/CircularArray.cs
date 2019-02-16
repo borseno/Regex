@@ -77,18 +77,14 @@ namespace Data_Structures
 
         public void CopyTo(T[] array, int arrayIndex)
         {
-            int i = 0;
-            for (; arrayIndex < array.Length && i < _data.Length; ++arrayIndex)
-            {
-                array[arrayIndex] = _data[i++];
-            }
+            _data.CopyTo(array, arrayIndex);
         }
 
         public IEnumerator<T> GetEnumerator()
         {
-            for (int i = 0; i < _data.Length; i++)
+            foreach (var t in _data)
             {
-                yield return _data[i];
+                yield return t;
             }
         }
 

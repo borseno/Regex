@@ -32,7 +32,6 @@ namespace RegExp
                         result.Add(new TextRange(FlowDocument.ContentStart, FlowDocument.ContentEnd));
                         return result;
                     }
-
                 }
 
                 TextPointer pointer = FlowDocument.ContentStart;
