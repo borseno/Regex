@@ -59,7 +59,6 @@
     </ApplicationDefinition>
     <Compile Include="DocumentOccurrencesFinder.cs" />
     <Compile Include="DocumentOccurrencesHighlighter.cs" />
-    <Compile Include="DocumentOccurrencesProcessor.cs" />
     <Compile Include="RegexTextProcessor.cs" />
     <Compile Include="RegexTextProcessor1.cs" />
     <Compile Include="StringExtension.cs" />

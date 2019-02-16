@@ -10,25 +10,32 @@ namespace RegExp
 {
     class DocumentOccurrencesFinder
     {
-        public IEnumerable<TextRange> GetOccurrencesRanges(FlowDocument flowDocument, Regex regex)
+        public FlowDocument FlowDocument { get; }
+
+        public DocumentOccurrencesFinder(FlowDocument flowDocument)
+        {
+            FlowDocument = flowDocument;
+        }
+
+        public IEnumerable<TextRange> GetOccurrencesRanges(Regex regex)
         {
             if (regex != null)
             {
                 List<TextRange> result = new List<TextRange>();
 
                 {
-                    string text = new TextRange(flowDocument.ContentStart, flowDocument.ContentEnd).Text;
+                    string text = new TextRange(FlowDocument.ContentStart, FlowDocument.ContentEnd).Text;
                     string pattern = regex.ToString();
 
                     if (CheckIfMatchesWholeString(text: text, pattern: pattern))
                     {
-                        result.Add(new TextRange(flowDocument.ContentStart, flowDocument.ContentEnd));
+                        result.Add(new TextRange(FlowDocument.ContentStart, FlowDocument.ContentEnd));
                         return result;
                     }
 
                 }
 
-                TextPointer pointer = flowDocument.ContentStart;
+                TextPointer pointer = FlowDocument.ContentStart;
 
                 while (pointer != null)
                 {

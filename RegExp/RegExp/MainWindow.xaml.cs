@@ -20,7 +20,9 @@ namespace RegExp
 {
     public partial class MainWindow : Window
     {
-        private readonly DocumentOccurrencesProcessor _occurrencesProcessor;
+        private readonly DocumentOccurrencesFinder _occurrencesFinder;
+        private readonly DocumentOccurrencesHighlighter _occurrencesHighlighter;
+
         private readonly RegexTextProcessor1 _regexProcessor;
         private bool _isBeingChanged;
 
@@ -31,7 +33,19 @@ namespace RegExp
         public MainWindow()
         {
             InitializeComponent();
-            _occurrencesProcessor = new DocumentOccurrencesProcessor(InputString.Document, Brushes.White, Brushes.Black);
+ 
+            _occurrencesFinder = new DocumentOccurrencesFinder(InputString.Document);
+
+            {
+                Brush defaultBack = Brushes.White;
+                Brush defaultFore = Brushes.Black;
+                _occurrencesHighlighter = 
+                    new DocumentOccurrencesHighlighter(
+                        InputString.Document, 
+                        defaultBack, defaultFore
+                        );
+            }
+
             _regexProcessor = new RegexTextProcessor1(InputRegExp, Colors.Red);
         }
 
@@ -46,7 +60,7 @@ namespace RegExp
         {
             _isBeingChanged = true;
 
-            _occurrencesProcessor.ResetTextProperties();
+            _occurrencesHighlighter.ResetTextProperties();
             _regexProcessor.ResetRegexProperties();
 
             if (String.IsNullOrEmpty(RegExpValue))
@@ -63,8 +77,14 @@ namespace RegExp
                 return;
             }
 
-            _occurrencesProcessor.GetOccurrencesRanges(regex);
-            _occurrencesProcessor.Highlight(Brushes.Azure, Brushes.Black, Brushes.DimGray, Brushes.Gray, Brushes.LightGray);
+            var foundRanges = _occurrencesFinder.GetOccurrencesRanges(regex);
+            _occurrencesHighlighter
+                .Highlight(
+                foundRanges, 
+                regex, 
+                Brushes.Azure,
+                Brushes.Black, Brushes.DimGray, Brushes.Gray, Brushes.LightGray
+                );
 
             _isBeingChanged = false;
         }
