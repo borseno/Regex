@@ -26,6 +26,9 @@ namespace RegExp
         private readonly RegexTextProcessor1 _regexProcessor;
         private bool _isBeingChanged;
         private Match[] _previous;
+        private bool _inputInTheEnd; // displays whether a user has written something in the end of RTB or not
+        private TextPointer _previousCaretPosition; // used if input is in the end to get the latest textrange
+        private bool _endHasBeenReset; // displays whether or not the back/fore properties of input have been fixed
 
         private string RegExpValue => InputRegExp.Text;
 
@@ -34,15 +37,15 @@ namespace RegExp
         public MainWindow()
         {
             InitializeComponent();
- 
+
             _occurrencesFinder = new DocumentOccurrencesFinder(InputString.Document);
 
             {
                 Brush defaultBack = Brushes.White;
                 Brush defaultFore = Brushes.Black;
-                _occurrencesHighlighter = 
+                _occurrencesHighlighter =
                     new DocumentOccurrencesHighlighter(
-                        InputString.Document, 
+                        InputString.Document,
                         defaultBack, defaultFore
                         );
             }
@@ -52,8 +55,6 @@ namespace RegExp
 
         private void OnTextChanged(object sender, TextChangedEventArgs e)
         {
-            ResetLatestInputProperties();
-
             if (!_isBeingChanged)
             {
                 Match[] current = Regex.Matches(Text, RegExpValue).Cast<Match>().ToArray();
@@ -61,6 +62,14 @@ namespace RegExp
                 if (!MatchesComparer.Equals(current, _previous))
                 {
                     UpdateValues();
+                    _endHasBeenReset = false;
+                }
+                else
+                {
+                    if (_inputInTheEnd && !_endHasBeenReset)
+                    {
+                        ResetLatestInputProperties();
+                    }
                 }
 
                 _previous = current;
@@ -92,8 +101,8 @@ namespace RegExp
             var foundRanges = _occurrencesFinder.GetOccurrencesRanges(regex);
             _occurrencesHighlighter
                 .Highlight(
-                foundRanges, 
-                regex, 
+                foundRanges,
+                regex,
                 Brushes.Azure,
                 Brushes.Black, Brushes.DimGray, Brushes.Gray, Brushes.LightGray
                 );
@@ -105,8 +114,30 @@ namespace RegExp
 
         private void ResetLatestInputProperties()
         {
-                  // TODO: 
-                  // Reset the latest input's back and foreground properties 
+
+            // TODO: 
+            // Reset the latest input's back and foreground properties 
+
+            TextRange latest = new TextRange(_previousCaretPosition, InputString.CaretPosition);
+
+            var defaultBack = Brushes.White;
+            var defaultFore = Brushes.Black;
+
+            latest.ApplyPropertyValue(TextElement.BackgroundProperty, defaultBack);
+            latest.ApplyPropertyValue(TextElement.ForegroundProperty, defaultFore);
+
+            _endHasBeenReset = true;
+        }
+
+        private void InputString_KeyDown(object sender, KeyEventArgs e)
+        {
+            TextRange textRange = new TextRange(InputString.CaretPosition, InputString.Document.ContentEnd);
+            _inputInTheEnd = textRange.IsEmpty || String.IsNullOrWhiteSpace(textRange.Text);
+
+            if (_inputInTheEnd)
+            {
+                _previousCaretPosition = InputString.CaretPosition;
+            }
         }
     }
 }
