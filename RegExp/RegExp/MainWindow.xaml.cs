@@ -26,16 +26,20 @@ namespace RegExp
         private readonly RegexTextProcessor1 _regexProcessor;
         private bool _isBeingChanged;
         private Match[] _previous;
+        private Regex _currentRegex;
         private TextPointer _previousCaretPosition; // used if input is in the end to get the latest textrange
 
         private bool ResetRequired
         {
             get
             {
+                if (_previousCaretPosition == null || InputString.CaretPosition == null)
+                    return false;
+
                 return !new TextRange(_previousCaretPosition, InputString.CaretPosition)
-                    .GetPropertyValue(TextBlock.BackgroundProperty).Equals(Brushes.White);
+                    .GetPropertyValue(TextBlock.BackgroundProperty)?.Equals(Brushes.White) ?? false;
             }
-        }// displays whether or not reset is needed even if matches are the same
+        } // displays whether or not reset is needed even if matches are the same
 
         private string RegExpValue => InputRegExp.Text;
 
@@ -64,16 +68,25 @@ namespace RegExp
         {
             if (!_isBeingChanged)
             {
-                Match[] current = Regex.Matches(Text, RegExpValue).Cast<Match>().ToArray();
+                try
+                {
+                    _currentRegex = new Regex(RegExpValue);
+                }
+                catch (ArgumentException)
+                {
+                    _regexProcessor.AddCurvyUnderline();
+                    return;
+                }
+                _regexProcessor.ResetRegexProperties();
 
-                if (!MatchesComparer.Equals(current, _previous) || ResetRequired)
-                {
-                    UpdateValues();
-                }
+                var current = _currentRegex.Matches(Text).Cast<Match>().ToArray();
+
+                if (ResetRequired)
+                    ResetValues();
+                else if (!MatchesComparer.Equals(current, _previous))
+                    ResetValues(); // todo: change to UpdateValues()
                 else
-                {
-                   ResetLatestInputProperties();
-                }
+                    ResetLatestInputProperties();
 
                 _previous = current;
             }
@@ -84,47 +97,41 @@ namespace RegExp
         {
             _isBeingChanged = true;
 
-            _occurrencesHighlighter.ResetTextProperties();
-            _regexProcessor.ResetRegexProperties();
-
-            if (String.IsNullOrEmpty(RegExpValue))
-            {
-                _isBeingChanged = false;
-                return;
-            }
-
-            Regex regex = null;
-            try
-            {
-                regex = new Regex(RegExpValue);
-            }
-            catch (ArgumentException)
-            {
-                _regexProcessor.AddCurvyUnderline();
-                _isBeingChanged = false;
-                return;
-            }
-
-            var foundRanges = _occurrencesFinder.GetOccurrencesRanges(regex);
+            var foundRanges = _occurrencesFinder.GetOccurrencesRanges(_currentRegex);
             _occurrencesHighlighter
                 .Highlight(
                 foundRanges,
-                regex,
+                _currentRegex,
                 Brushes.Azure,
                 Brushes.Black, Brushes.DimGray, Brushes.Gray, Brushes.LightGray
                 );
 
             _isBeingChanged = false;
         }
-        #endregion
+        private void ResetValues()
+        {
+            _isBeingChanged = true;
 
+            _occurrencesHighlighter.ResetTextProperties();
+
+            var foundRanges = _occurrencesFinder.GetOccurrencesRanges(_currentRegex);
+            _occurrencesHighlighter
+                .Highlight(
+                    foundRanges,
+                    _currentRegex,
+                    Brushes.Azure,
+                    Brushes.Black, Brushes.DimGray, Brushes.Gray, Brushes.LightGray
+                );
+
+            _isBeingChanged = false;
+        }
+        #endregion
 
         private void ResetLatestInputProperties()
         {
             // TODO: 
             // Reset the latest input's back and foreground properties 
             _isBeingChanged = true;
-
 
             TextRange latest = new TextRange(_previousCaretPosition, InputString.CaretPosition);
 
