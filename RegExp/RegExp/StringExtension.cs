@@ -11,7 +11,7 @@ namespace RegExp
     {
         public static string RemoveAll(this string @string, params char[] @value)
         {
-            StringBuilder result = new StringBuilder(32);
+            StringBuilder result = new StringBuilder(@string.Length);
 
             for (int i = 0; i < @string.Length; i++)
             {
