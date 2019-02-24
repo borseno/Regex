@@ -26,9 +26,16 @@ namespace RegExp
         private readonly RegexTextProcessor1 _regexProcessor;
         private bool _isBeingChanged;
         private Match[] _previous;
-        private bool _inputInTheEnd; // displays whether a user has written something in the end of RTB or not
         private TextPointer _previousCaretPosition; // used if input is in the end to get the latest textrange
-        private bool _endHasBeenReset; // displays whether or not the back/fore properties of input have been fixed
+
+        private bool ResetRequired
+        {
+            get
+            {
+                return !new TextRange(_previousCaretPosition, InputString.CaretPosition)
+                    .GetPropertyValue(TextBlock.BackgroundProperty).Equals(Brushes.White);
+            }
+        }// displays whether or not reset is needed even if matches are the same
 
         private string RegExpValue => InputRegExp.Text;
 
@@ -59,17 +66,13 @@ namespace RegExp
             {
                 Match[] current = Regex.Matches(Text, RegExpValue).Cast<Match>().ToArray();
 
-                if (!MatchesComparer.Equals(current, _previous))
+                if (!MatchesComparer.Equals(current, _previous) || ResetRequired)
                 {
                     UpdateValues();
-                    _endHasBeenReset = false;
                 }
                 else
                 {
-                    if (_inputInTheEnd && !_endHasBeenReset)
-                    {
-                        ResetLatestInputProperties();
-                    }
+                   ResetLatestInputProperties();
                 }
 
                 _previous = current;
@@ -85,7 +88,10 @@ namespace RegExp
             _regexProcessor.ResetRegexProperties();
 
             if (String.IsNullOrEmpty(RegExpValue))
+            {
+                _isBeingChanged = false;
                 return;
+            }
 
             Regex regex = null;
             try
@@ -95,6 +101,7 @@ namespace RegExp
             catch (ArgumentException)
             {
                 _regexProcessor.AddCurvyUnderline();
+                _isBeingChanged = false;
                 return;
             }
 
@@ -114,9 +121,10 @@ namespace RegExp
 
         private void ResetLatestInputProperties()
         {
-
             // TODO: 
             // Reset the latest input's back and foreground properties 
+            _isBeingChanged = true;
+
 
             TextRange latest = new TextRange(_previousCaretPosition, InputString.CaretPosition);
 
@@ -126,18 +134,15 @@ namespace RegExp
             latest.ApplyPropertyValue(TextElement.BackgroundProperty, defaultBack);
             latest.ApplyPropertyValue(TextElement.ForegroundProperty, defaultFore);
 
-            _endHasBeenReset = true;
+            _isBeingChanged = false;
         }
 
         private void InputString_KeyDown(object sender, KeyEventArgs e)
         {
             TextRange textRange = new TextRange(InputString.CaretPosition, InputString.Document.ContentEnd);
-            _inputInTheEnd = textRange.IsEmpty || String.IsNullOrWhiteSpace(textRange.Text);
+           
+            _previousCaretPosition = InputString.CaretPosition;
 
-            if (_inputInTheEnd)
-            {
-                _previousCaretPosition = InputString.CaretPosition;
-            }
         }
     }
 }
