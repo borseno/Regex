@@ -14,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Text.RegularExpressions;
+using System.Windows.Controls.Primitives;
 using Data_Structures;
 
 namespace RegExp
@@ -22,9 +23,9 @@ namespace RegExp
     {
         private readonly DocumentOccurrencesFinder _occurrencesFinder;
         private readonly DocumentOccurrencesHighlighter _occurrencesHighlighter;
-
         private readonly RegexTextProcessor1 _regexProcessor;
         private bool _isBeingChanged;
+        private Match[] _previous;
 
         private string RegExpValue => InputRegExp.Text;
 
@@ -51,8 +52,19 @@ namespace RegExp
 
         private void OnTextChanged(object sender, TextChangedEventArgs e)
         {
+            ResetLatestInputProperties();
+
             if (!_isBeingChanged)
-                UpdateValues();
+            {
+                Match[] current = Regex.Matches(Text, RegExpValue).Cast<Match>().ToArray();
+
+                if (!MatchesComparer.Equals(current, _previous))
+                {
+                    UpdateValues();
+                }
+
+                _previous = current;
+            }
         }
 
         #region processing
@@ -89,5 +101,12 @@ namespace RegExp
             _isBeingChanged = false;
         }
         #endregion
+
+
+        private void ResetLatestInputProperties()
+        {
+                  // TODO: 
+                  // Reset the latest input's back and foreground properties 
+        }
     }
 }
