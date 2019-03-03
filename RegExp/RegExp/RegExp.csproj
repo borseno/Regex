@@ -59,6 +59,9 @@
     </ApplicationDefinition>
     <Compile Include="DocumentOccurrencesFinder.cs" />
     <Compile Include="DocumentOccurrencesHighlighter.cs" />
+    <Compile Include="DocumentOccurrencesHighlighter1.cs" />
+    <Compile Include="BrushesGenerator.cs" />
+    <Compile Include="MatchesArrayExtension.cs" />
     <Compile Include="MatchesComparer.cs" />
     <Compile Include="RegexTextProcessor.cs" />
     <Compile Include="RegexTextProcessor1.cs" />

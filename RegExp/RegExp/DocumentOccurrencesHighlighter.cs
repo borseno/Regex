@@ -12,26 +12,35 @@ namespace RegExp
 {
     class DocumentOccurrencesHighlighter
     {
-        private readonly FlowDocument _flowDocument;
-        private readonly Brush _defaultBackGround;
-        private readonly Brush _defaultForeGround;
+        protected FlowDocument FlowDocument { get; }
+        protected int Index { get; private set; }
 
-        public DocumentOccurrencesHighlighter(FlowDocument document, Brush defaultBackGround, Brush defaultForeGround)
+        public Brush DefaultBackground { get; set; }
+        public Brush DefaultForeground { get; set; }
+
+        public CircularArray<Brush> BackgroundBrushes { get; }
+        public CircularArray<Brush> ForegroundBrushes { get; }
+
+        public DocumentOccurrencesHighlighter(
+            FlowDocument document, Brush defaultBackGround, Brush defaultForeGround, 
+            IEnumerable<Brush> backgroundBrushes, IEnumerable<Brush> foregroundBrushes)
         {
-            _flowDocument = document;
-            _defaultBackGround = defaultBackGround;
-            _defaultForeGround = defaultForeGround;
+            FlowDocument = document;
+            DefaultBackground = defaultBackGround;
+            DefaultForeground = defaultForeGround;
+
+            BackgroundBrushes = new CircularArray<Brush>(backgroundBrushes.ToArray());
+            ForegroundBrushes = new CircularArray<Brush>(foregroundBrushes.ToArray());
         }
 
-        // TODO: Split into multiple tasks.
-        public void Highlight(IEnumerable<TextRange> textRanges, Regex regex, Brush foreGround, params Brush[] brushes)
+        public void Highlight(IEnumerable<TextRange> textRanges, Regex regex, bool continueWithPreviousColors = false)
         {
-            if (textRanges?.Count() > 0)
-            {
-                var textRangesArray = textRanges.ToArray();
+            var textRangesArray = textRanges.ToArray();
 
-                CircularArray<Brush> backgroundValues = new CircularArray<Brush>(brushes);
-                int index = 0;
+            if (textRangesArray.Length > 0)
+            {
+                if (!continueWithPreviousColors)
+                    Index = 0;
 
                 foreach (TextRange i in textRangesArray)
                 {
@@ -42,8 +51,10 @@ namespace RegExp
 
                     if (Regex.IsMatch(i.Text.RemoveAll('\r', '\n'), regExpression))
                     {
-                        i.ApplyPropertyValue(TextElement.BackgroundProperty, backgroundValues[index++]);
-                        i.ApplyPropertyValue(TextElement.ForegroundProperty, foreGround);
+                        i.ApplyPropertyValue(TextElement.BackgroundProperty, BackgroundBrushes[Index]);
+                        i.ApplyPropertyValue(TextElement.ForegroundProperty, ForegroundBrushes[Index]);
+
+                        Index++;
                     }
                 }
             }
@@ -52,12 +63,12 @@ namespace RegExp
         public void ResetTextProperties()
         {
             TextRange textRange = new TextRange(
-                _flowDocument.ContentStart,
-                _flowDocument.ContentEnd
+                FlowDocument.ContentStart,
+                FlowDocument.ContentEnd
             );
 
-            textRange.ApplyPropertyValue(TextElement.BackgroundProperty, _defaultBackGround);
-            textRange.ApplyPropertyValue(TextElement.ForegroundProperty, _defaultForeGround);
+            textRange.ApplyPropertyValue(TextElement.BackgroundProperty, DefaultBackground);
+            textRange.ApplyPropertyValue(TextElement.ForegroundProperty, DefaultForeground);
         }
     }
 }

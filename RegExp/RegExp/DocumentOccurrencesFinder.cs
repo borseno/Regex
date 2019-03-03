@@ -1,15 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows.Documents;
 
 namespace RegExp
 {
     class DocumentOccurrencesFinder
     {
+        private List<TextRange> _previousRanges;
+
         public FlowDocument FlowDocument { get; }
 
         public DocumentOccurrencesFinder(FlowDocument flowDocument)
@@ -17,12 +16,13 @@ namespace RegExp
             FlowDocument = flowDocument;
         }
 
-        public IEnumerable<TextRange> GetOccurrencesRanges(Regex regex)
+        public IEnumerable<TextRange> GetOccurrencesRanges(Regex regex, bool updatePreviousCall = false)
         {
             if (regex != null)
             {
                 List<TextRange> result = new List<TextRange>();
 
+                #region returnAllDocumentIfMatchesAllDocument
                 {
                     string text = new TextRange(FlowDocument.ContentStart, FlowDocument.ContentEnd).Text;
                     string pattern = regex.ToString();
@@ -33,19 +33,37 @@ namespace RegExp
                         return result;
                     }
                 }
+                #endregion
 
-                TextPointer pointer = FlowDocument.ContentStart;
+                TextPointer pointer = null;
+
+                #region initPointer
+                {
+                    if (updatePreviousCall)
+                    {
+                        if (_previousRanges != null)
+                            pointer = _previousRanges.LastOrDefault()?.Start
+                                .GetNextContextPosition(LogicalDirection.Forward);
+                    }
+
+                    if (pointer == null)
+                        pointer = FlowDocument.ContentStart;
+                }
+                #endregion
 
                 while (pointer != null)
                 {
                     if (pointer.GetPointerContext(LogicalDirection.Forward) == TextPointerContext.Text)
                     {
                         string textRun = pointer.GetTextInRun(LogicalDirection.Forward);
+
                         MatchCollection matches = regex.Matches(textRun);
-                        foreach (Match match in matches)
+                        
+                        for (int i = 0; i < matches.Count; i++)
                         {
-                            int startIndex = match.Index;
-                            int length = match.Length;
+                            int startIndex = matches[i].Index;
+                            int length = matches[i].Length;
+
                             TextPointer start = pointer.GetPositionAtOffset(startIndex);
                             TextPointer end = start?.GetPositionAtOffset(length);
 
@@ -58,7 +76,7 @@ namespace RegExp
                     pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
                 }
 
-                return result;
+                return _previousRanges = result;
             }
 
             return null;

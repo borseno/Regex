@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -15,31 +16,19 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Text.RegularExpressions;
 using System.Windows.Controls.Primitives;
-using Data_Structures;
 
 namespace RegExp
 {
-    public partial class MainWindow : Window
+    partial class MainWindow : Window
     {
         private readonly DocumentOccurrencesFinder _occurrencesFinder;
-        private readonly DocumentOccurrencesHighlighter _occurrencesHighlighter;
+        private readonly DocumentOccurrencesHighlighter1 _occurrencesHighlighter;
         private readonly RegexTextProcessor1 _regexProcessor;
         private bool _isBeingChanged;
         private Match[] _previous;
+        private Match[] _current;
         private Regex _currentRegex;
-        private TextPointer _previousCaretPosition; // used if input is in the end to get the latest textrange
-
-        private bool ResetRequired
-        {
-            get
-            {
-                if (_previousCaretPosition == null || InputString.CaretPosition == null)
-                    return false;
-
-                return !new TextRange(_previousCaretPosition, InputString.CaretPosition)
-                    .GetPropertyValue(TextBlock.BackgroundProperty)?.Equals(Brushes.White) ?? false;
-            }
-        } // displays whether or not reset is needed even if matches are the same
+        private TextPointer _previousCaretPosition; // used if input is in the end to get the latest textRange
 
         private string RegExpValue => InputRegExp.Text;
 
@@ -51,15 +40,57 @@ namespace RegExp
 
             _occurrencesFinder = new DocumentOccurrencesFinder(InputString.Document);
 
+            #region initHighlighter
             {
                 Brush defaultBack = Brushes.White;
                 Brush defaultFore = Brushes.Black;
+                Brush[] foregroundHighlightingBrushes;
+                Brush[] backgroundHighlightingBrushes;
+
+                #region init brushes
+                {
+                    #region init foreground highlighting brushes
+                    {
+                        byte foreStart = 0;
+                        byte foreAdd = 24;
+                        int foreAmount = 10;
+
+                        foregroundHighlightingBrushes =
+                            BrushesGenerator.GenerateBrushes(
+                                foreStart, foreAdd,
+                                foreStart, foreAdd,
+                                foreStart, foreAdd,
+                                foreAmount
+                            ).ToArray();
+                    }
+                    #endregion
+                    #region init background highlighting brushes
+                    {
+                        byte backStart = 255;
+                        sbyte backAdd = -24;
+                        int backAmount = 10;
+
+                        backgroundHighlightingBrushes =
+                            BrushesGenerator
+                                .GenerateBrushes(
+                                    backStart, backAdd,
+                                    backStart, backAdd,
+                                    backStart, backAdd,
+                                    backAmount
+                                ).ToArray();
+                    }
+                    #endregion
+                }
+                #endregion
+
                 _occurrencesHighlighter =
-                    new DocumentOccurrencesHighlighter(
+                    new DocumentOccurrencesHighlighter1(
                         InputString.Document,
-                        defaultBack, defaultFore
+                        defaultBack, defaultFore,
+                        foregroundHighlightingBrushes, backgroundHighlightingBrushes
                         );
             }
+            #endregion
 
             _regexProcessor = new RegexTextProcessor1(InputRegExp, Colors.Red);
         }
@@ -68,6 +99,8 @@ namespace RegExp
         {
             if (!_isBeingChanged)
             {
+                _isBeingChanged = true;
+
                 try
                 {
                     _currentRegex = new Regex(RegExpValue);
@@ -75,81 +108,57 @@ namespace RegExp
                 catch (ArgumentException)
                 {
                     _regexProcessor.AddCurvyUnderline();
+                    _isBeingChanged = false;
                     return;
                 }
                 _regexProcessor.ResetRegexProperties();
 
-                var current = _currentRegex.Matches(Text).Cast<Match>().ToArray();
+                _current = _currentRegex.Matches(Text).Cast<Match>().ToArray();
 
-                if (ResetRequired)
+                if (_current.ContainsInStart(_previous) && _current.Length > _previous.Length)
+                    UpdateValues();
+                else if (!MatchesComparer.Equals(_current, _previous))
                     ResetValues();
-                else if (!MatchesComparer.Equals(current, _previous))
-                    ResetValues(); // todo: change to UpdateValues()
                 else
                     ResetLatestInputProperties();
 
-                _previous = current;
+                _previous = _current;
+
+                _isBeingChanged = false;
             }
         }
 
         #region processing
         private void UpdateValues()
         {
-            _isBeingChanged = true;
+            var foundRanges = _occurrencesFinder
+                .GetOccurrencesRanges(_currentRegex, updatePreviousCall: true)
+                .ToArray();
 
-            var foundRanges = _occurrencesFinder.GetOccurrencesRanges(_currentRegex);
-            _occurrencesHighlighter
-                .Highlight(
-                foundRanges,
-                _currentRegex,
-                Brushes.Azure,
-                Brushes.Black, Brushes.DimGray, Brushes.Gray, Brushes.LightGray
-                );
-
-            _isBeingChanged = false;
+            _occurrencesHighlighter.Highlight(foundRanges, _currentRegex, continueWithPreviousColors: true);
         }
         private void ResetValues()
         {
-            _isBeingChanged = true;
-
             _occurrencesHighlighter.ResetTextProperties();
 
-            var foundRanges = _occurrencesFinder.GetOccurrencesRanges(_currentRegex);
-            _occurrencesHighlighter
-                .Highlight(
-                    foundRanges,
-                    _currentRegex,
-                    Brushes.Azure,
-                    Brushes.Black, Brushes.DimGray, Brushes.Gray, Brushes.LightGray
-                );
+            var foundRanges = _occurrencesFinder
+                .GetOccurrencesRanges(_currentRegex)
+                .ToArray();
 
-            _isBeingChanged = false;
+            _occurrencesHighlighter.Highlight(foundRanges, _currentRegex);
         }
         #endregion
 
         private void ResetLatestInputProperties()
         {
-            // TODO: 
-            // Reset the latest input's back and foreground properties 
-            _isBeingChanged = true;
+            TextRange latest = new TextRange(_previousCaretPosition, InputString.CaretPosition); // bug here!?
 
-            TextRange latest = new TextRange(_previousCaretPosition, InputString.CaretPosition);
-
-            var defaultBack = Brushes.White;
-            var defaultFore = Brushes.Black;
-
-            latest.ApplyPropertyValue(TextElement.BackgroundProperty, defaultBack);
-            latest.ApplyPropertyValue(TextElement.ForegroundProperty, defaultFore);
-
-            _isBeingChanged = false;
+            _occurrencesHighlighter.ResetTextProperties(latest);
         }
 
         private void InputString_KeyDown(object sender, KeyEventArgs e)
         {
-            TextRange textRange = new TextRange(InputString.CaretPosition, InputString.Document.ContentEnd);
-           
             _previousCaretPosition = InputString.CaretPosition;
-
         }
     }
 }
