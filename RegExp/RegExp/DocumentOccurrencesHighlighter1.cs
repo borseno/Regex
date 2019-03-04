@@ -21,10 +21,11 @@ namespace RegExp
 
         public void ResetTextProperties(TextRange range)
         {
-            range.ApplyPropertyValue(TextElement.BackgroundProperty, DefaultBackground);
-            range.ApplyPropertyValue(TextElement.ForegroundProperty, DefaultForeground);
-
-            Debug.WriteLine("ResetTextProperties range text: " + range.Text);
+            if (range != null)
+            {
+                range.ApplyPropertyValue(TextElement.BackgroundProperty, DefaultBackground);
+                range.ApplyPropertyValue(TextElement.ForegroundProperty, DefaultForeground);
+            }
         }
     }
 }

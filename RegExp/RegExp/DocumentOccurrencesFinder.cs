@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Documents;
@@ -70,6 +71,8 @@ namespace RegExp
                             TextRange textRange = new TextRange(start, end);
 
                             result.Add(textRange);
+
+                            Debug.WriteLine(result.Count);
                         }
                     }
       

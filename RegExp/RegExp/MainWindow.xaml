@@ -8,7 +8,7 @@
         Title="RegExp processor" Height="450" Width="800" x:ClassModifier="internal">
     <Grid>
         <RichTextBox x:Name="InputString" HorizontalAlignment="Left" Height="245" Margin="22,134,0,0" 
-                  VerticalAlignment="Top" Width="743" RenderTransformOrigin="0.5,0.5" FontSize="16" UndoLimit="200" TextChanged="OnTextChanged" VerticalScrollBarVisibility="Auto" KeyDown="InputString_KeyDown">
+                  VerticalAlignment="Top" Width="743" RenderTransformOrigin="0.5,0.5" FontSize="16" UndoLimit="200" TextChanged="OnTextChanged" VerticalScrollBarVisibility="Auto">
             <RichTextBox.RenderTransform>
                 <TransformGroup>
                     <ScaleTransform/>

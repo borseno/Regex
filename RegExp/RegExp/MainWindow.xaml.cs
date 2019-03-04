@@ -28,7 +28,6 @@ namespace RegExp
         private Match[] _previous;
         private Match[] _current;
         private Regex _currentRegex;
-        private TextPointer _previousCaretPosition; // used if input is in the end to get the latest textRange
         private bool _latestTextRangePropertiesReset;
 
         private string RegExpValue => InputRegExp.Text;
@@ -39,8 +38,10 @@ namespace RegExp
         {
             get
             {
-                if (_previousCaretPosition != null)
-                    return new TextRange(_previousCaretPosition, InputString.CaretPosition);
+                TextPointer behindCurrentCaret = InputString.CaretPosition.GetPositionAtOffset(-1);
+
+                if (behindCurrentCaret != null)
+                    return new TextRange(behindCurrentCaret, InputString.CaretPosition);
                 return null;
             }
         }
@@ -151,7 +152,7 @@ namespace RegExp
         #region processing
         private void UpdateValues()
         {
-            var foundRanges = _occurrencesFinder
+            var foundRanges = _occurrencesFinder // bug here
                 .GetOccurrencesRanges(_currentRegex, updatePreviousCall: true)
                 .ToArray();
 
@@ -175,11 +176,6 @@ namespace RegExp
             {
                 _occurrencesHighlighter.ResetTextProperties(LatestSymbol);
             }
-        }
-
-        private void InputString_KeyDown(object sender, KeyEventArgs e)
-        {
-            _previousCaretPosition = InputString.CaretPosition; // bug here!
         }
     }
 }
