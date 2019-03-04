@@ -29,10 +29,21 @@ namespace RegExp
         private Match[] _current;
         private Regex _currentRegex;
         private TextPointer _previousCaretPosition; // used if input is in the end to get the latest textRange
+        private bool _latestTextRangePropertiesReset;
 
         private string RegExpValue => InputRegExp.Text;
 
         private string Text => new TextRange(InputString.Document.ContentStart, InputString.Document.ContentEnd).Text;
+
+        private TextRange LatestSymbol
+        {
+            get
+            {
+                if (_previousCaretPosition != null)
+                    return new TextRange(_previousCaretPosition, InputString.CaretPosition);
+                return null;
+            }
+        }
 
         public MainWindow()
         {
@@ -116,11 +127,20 @@ namespace RegExp
                 _current = _currentRegex.Matches(Text).Cast<Match>().ToArray();
 
                 if (_current.ContainsInStart(_previous) && _current.Length > _previous.Length)
+                {
                     UpdateValues();
+                    _latestTextRangePropertiesReset = false;
+                }
                 else if (!MatchesComparer.Equals(_current, _previous))
+                {
                     ResetValues();
+                    _latestTextRangePropertiesReset = false;
+                }
                 else
+                {
                     ResetLatestInputProperties();
+                    _latestTextRangePropertiesReset = true;
+                }
 
                 _previous = _current;
 
@@ -151,14 +171,15 @@ namespace RegExp
 
         private void ResetLatestInputProperties()
         {
-            TextRange latest = new TextRange(_previousCaretPosition, InputString.CaretPosition); // bug here!?
-
-            _occurrencesHighlighter.ResetTextProperties(latest);
+            if (!_latestTextRangePropertiesReset)
+            {
+                _occurrencesHighlighter.ResetTextProperties(LatestSymbol);
+            }
         }
 
         private void InputString_KeyDown(object sender, KeyEventArgs e)
         {
-            _previousCaretPosition = InputString.CaretPosition;
+            _previousCaretPosition = InputString.CaretPosition; // bug here!
         }
     }
 }

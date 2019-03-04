@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,6 +23,8 @@ namespace RegExp
         {
             range.ApplyPropertyValue(TextElement.BackgroundProperty, DefaultBackground);
             range.ApplyPropertyValue(TextElement.ForegroundProperty, DefaultForeground);
+
+            Debug.WriteLine("ResetTextProperties range text: " + range.Text);
         }
     }
 }
