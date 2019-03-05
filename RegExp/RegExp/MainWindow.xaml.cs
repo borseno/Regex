@@ -152,7 +152,7 @@ namespace RegExp
         #region processing
         private void UpdateValues()
         {
-            var foundRanges = _occurrencesFinder // bug here
+            var foundRanges = _occurrencesFinder
                 .GetOccurrencesRanges(_currentRegex, updatePreviousCall: true)
                 .ToArray();
 

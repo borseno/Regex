@@ -25,14 +25,14 @@ namespace RegExp
 
                 #region returnAllDocumentIfMatchesAllDocument
                 {
-                    string text = new TextRange(FlowDocument.ContentStart, FlowDocument.ContentEnd).Text;
-                    string pattern = regex.ToString();
+                    //string text = new TextRange(FlowDocument.ContentStart, FlowDocument.ContentEnd).Text;
+                    //string pattern = regex.ToString();
 
-                    if (CheckIfMatchesWholeString(text: text, pattern: pattern))
-                    {
-                        result.Add(new TextRange(FlowDocument.ContentStart, FlowDocument.ContentEnd));
-                        return result;
-                    }
+                    //if (CheckIfMatchesWholeString(text: text, pattern: pattern))
+                    //{
+                    //    result.Add(new TextRange(FlowDocument.ContentStart, FlowDocument.ContentEnd));
+                    //    return _previousRanges = result;
+                    //}
                 }
                 #endregion
 
@@ -43,8 +43,10 @@ namespace RegExp
                     if (updatePreviousCall)
                     {
                         if (_previousRanges != null)
-                            pointer = _previousRanges.LastOrDefault()?.Start
-                                .GetNextContextPosition(LogicalDirection.Forward);
+                            pointer = _previousRanges
+                                .LastOrDefault()
+                                ?.Start
+                                .GetPositionAtOffset(1);
                     }
 
                     if (pointer == null)
@@ -71,14 +73,13 @@ namespace RegExp
                             TextRange textRange = new TextRange(start, end);
 
                             result.Add(textRange);
-
-                            Debug.WriteLine(result.Count);
                         }
                     }
       
                     pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
                 }
 
+                Debug.WriteLine(result.Count);
                 return _previousRanges = result;
             }
 
