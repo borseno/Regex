@@ -13,7 +13,7 @@ namespace RegExp
 {
     class RegexTextProcessor
     {
-        public Color Color { get; }
+        public Color Color { get; set; }
 
         public TextBox TextBox { get; }
 
