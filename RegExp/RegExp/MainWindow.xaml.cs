@@ -29,6 +29,7 @@ namespace RegExp
         private Match[] _current;
         private Regex _currentRegex;
         private bool _latestTextRangePropertiesReset;
+        private int _latestOffset;
 
         private string RegExpValue => InputRegExp.Text;
 
@@ -43,6 +44,49 @@ namespace RegExp
                 if (behindCurrentCaret != null)
                     return new TextRange(behindCurrentCaret, InputString.CaretPosition);
                 return null;
+            }
+        }
+
+        private int LatestSymbolIndex
+        {
+            get
+            {
+                if (LatestSymbol == null)
+                    return -1;
+                return InputString.Document.ContentStart.GetOffsetToPosition(LatestSymbol?.Start);
+            }
+        }
+
+        private bool LatestTextRangeResetRequired
+        {
+            get
+            {
+                var currentCaret = InputString.CaretPosition;
+                var behindCurrentCaret = InputString.CaretPosition.GetPositionAtOffset(-1);
+
+                if (behindCurrentCaret == null)
+                    return false;
+
+                var prop =
+                    new TextRange(behindCurrentCaret, currentCaret)
+                        .GetPropertyValue(TextElement.ForegroundProperty);
+
+                var anotherRTB = new RichTextBox();
+
+                var emptyRange =
+                    new TextRange(
+                        anotherRTB.Document.ContentStart,
+                        anotherRTB.Document.ContentEnd
+                        );
+                emptyRange.ApplyPropertyValue(TextElement.ForegroundProperty, _occurrencesHighlighter.DefaultForeground);
+
+                var prop1 = emptyRange.GetPropertyValue(TextElement.ForegroundProperty);
+
+                bool result = !Equals(prop, prop1);
+
+                Debug.WriteLine("LatestTextRangeResetRequired result: " + result);
+
+                return result;
             }
         }
 
@@ -127,24 +171,37 @@ namespace RegExp
 
                 _current = _currentRegex.Matches(Text).Cast<Match>().ToArray();
 
-                if (_current.ContainsInStart(_previous) && _current.Length > _previous.Length)
-                {
-                    UpdateValues();
-                    _latestTextRangePropertiesReset = false;
-                }
-                else if (!MatchesComparer.Equals(_current, _previous))
+                bool previousIsCurrent = MatchesComparer.Equals(_current, _previous);
+
+                Debug.WriteLine("Start: LatestSymbolIndex " + LatestSymbolIndex + "; _latestOffset: " + _latestOffset);
+
+                if (_latestOffset != -1 && LatestSymbolIndex <= _latestOffset)
                 {
                     ResetValues();
                     _latestTextRangePropertiesReset = false;
                 }
-                else
+                else if (_current.LastOrDefault()?.Index + _current.LastOrDefault()?.Length != Text.Length - 2 &&
+                    previousIsCurrent &&
+                    (!_latestTextRangePropertiesReset || LatestTextRangeResetRequired))
                 {
                     ResetLatestInputProperties();
                     _latestTextRangePropertiesReset = true;
                 }
+                else if (_current.ContainsInStart(_previous) && _current.Length > _previous.Length)
+                {
+                    ResetLatestInputProperties();
+                    UpdateValues();
+                    _latestTextRangePropertiesReset = false;
+                }
+                else if (!previousIsCurrent)
+                {
+                    ResetValues();
+                    _latestTextRangePropertiesReset = false;
+                }
+
+                Debug.WriteLine("End: LatestSymbolIndex " + LatestSymbolIndex + "; _latestOffset: " + _latestOffset);
 
                 _previous = _current;
-
                 _isBeingChanged = false;
             }
         }
@@ -156,26 +213,43 @@ namespace RegExp
                 .GetOccurrencesRanges(_currentRegex, updatePreviousCall: true)
                 .ToArray();
 
+            if (foundRanges.Length > 0)
+            {
             _occurrencesHighlighter.Highlight(foundRanges, _currentRegex, continueWithPreviousColors: true);
+            _latestOffset = InputString.Document.ContentStart.GetOffsetToPosition(foundRanges.Last().Start) + 1;
+            }
+            else
+            {
+                _latestOffset = -1;
+            }
         }
         private void ResetValues()
         {
+            Debug.WriteLine("Reset is called");
+
             _occurrencesHighlighter.ResetTextProperties();
 
             var foundRanges = _occurrencesFinder
                 .GetOccurrencesRanges(_currentRegex)
                 .ToArray();
 
-            _occurrencesHighlighter.Highlight(foundRanges, _currentRegex);
+
+            if (foundRanges.Length > 0)
+            {
+                _occurrencesHighlighter.Highlight(foundRanges, _currentRegex);
+                _latestOffset = InputString.Document.ContentStart.GetOffsetToPosition(foundRanges.Last().Start) + 1;
+            }
+            else
+            {
+                _latestOffset = -1;
+            }
+
         }
         #endregion
 
         private void ResetLatestInputProperties()
         {
-            if (!_latestTextRangePropertiesReset)
-            {
-                _occurrencesHighlighter.ResetTextProperties(LatestSymbol);
-            }
+            _occurrencesHighlighter.ResetTextProperties(LatestSymbol);
         }
     }
 }

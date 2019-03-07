@@ -23,19 +23,6 @@ namespace RegExp
             {
                 List<TextRange> result = new List<TextRange>();
 
-                #region returnAllDocumentIfMatchesAllDocument
-                {
-                    //string text = new TextRange(FlowDocument.ContentStart, FlowDocument.ContentEnd).Text;
-                    //string pattern = regex.ToString();
-
-                    //if (CheckIfMatchesWholeString(text: text, pattern: pattern))
-                    //{
-                    //    result.Add(new TextRange(FlowDocument.ContentStart, FlowDocument.ContentEnd));
-                    //    return _previousRanges = result;
-                    //}
-                }
-                #endregion
-
                 TextPointer pointer = null;
 
                 #region initPointer
@@ -46,7 +33,7 @@ namespace RegExp
                             pointer = _previousRanges
                                 .LastOrDefault()
                                 ?.Start
-                                .GetPositionAtOffset(1);
+                                .GetNextContextPosition(LogicalDirection.Forward);
                     }
 
                     if (pointer == null)
@@ -79,18 +66,10 @@ namespace RegExp
                     pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
                 }
 
-                Debug.WriteLine(result.Count);
                 return _previousRanges = result;
             }
 
             return null;
-        }
-        private bool CheckIfMatchesWholeString(string text, string pattern)
-        {
-            return pattern.EndsWith("$") &&
-                   pattern.StartsWith("^") &&
-                   pattern.Trim('^', '$') == text.RemoveAll('\r', '\n') ||
-                   pattern == text.RemoveAll('\r', '\n');
         }
     }
 }
