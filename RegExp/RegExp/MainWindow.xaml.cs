@@ -59,6 +59,7 @@ namespace RegExp
 
         private bool LatestTextRangeResetRequired
         {
+            // TODO: Optimize this
             get
             {
                 var currentCaret = InputString.CaretPosition;
@@ -171,16 +172,18 @@ namespace RegExp
 
                 _current = _currentRegex.Matches(Text).Cast<Match>().ToArray();
 
-                bool previousIsCurrent = MatchesComparer.Equals(_current, _previous);
+                // TODO: 1. Optimize case when changing the text after already highlighted text.
+                // TODO:    Not to reset the whole text, but update.
 
-                Debug.WriteLine("Start: LatestSymbolIndex " + LatestSymbolIndex + "; _latestOffset: " + _latestOffset);
+                bool previousIsCurrent = MatchesComparer.Equals(_current, _previous);
+                const int symbolsToRemove = 2;
 
                 if (_latestOffset != -1 && LatestSymbolIndex <= _latestOffset)
                 {
                     ResetValues();
                     _latestTextRangePropertiesReset = false;
                 }
-                else if (_current.LastOrDefault()?.Index + _current.LastOrDefault()?.Length != Text.Length - 2 &&
+                else if (_current.LastOrDefault()?.Index + _current.LastOrDefault()?.Length != Text.Length - symbolsToRemove &&
                     previousIsCurrent &&
                     (!_latestTextRangePropertiesReset || LatestTextRangeResetRequired))
                 {
@@ -198,8 +201,6 @@ namespace RegExp
                     ResetValues();
                     _latestTextRangePropertiesReset = false;
                 }
-
-                Debug.WriteLine("End: LatestSymbolIndex " + LatestSymbolIndex + "; _latestOffset: " + _latestOffset);
 
                 _previous = _current;
                 _isBeingChanged = false;
