@@ -168,6 +168,7 @@ namespace RegExp
                     _isBeingChanged = false;
                     return;
                 }
+
                 _regexProcessor.ResetRegexProperties();
 
                 _current = _currentRegex.Matches(Text).Cast<Match>().ToArray();
@@ -178,7 +179,14 @@ namespace RegExp
                 bool previousIsCurrent = MatchesComparer.Equals(_current, _previous);
                 const int symbolsToRemove = 2;
 
-                if (_latestOffset != -1 && LatestSymbolIndex <= _latestOffset)
+                Debug.WriteLine($"START: _latestOffset: {_latestOffset}; LatestSymbolIndex: {LatestSymbolIndex}");
+
+                if (_current.LastOrDefault()?.Value.Length > 1 && _latestOffset != -1 && LatestSymbolIndex <= _latestOffset)
+                {
+                    ResetValues();
+                    _latestTextRangePropertiesReset = false;
+                }
+                else if (_current.LastOrDefault()?.Value.Length == 1 && _latestOffset != -1 && LatestSymbolIndex < _latestOffset)
                 {
                     ResetValues();
                     _latestTextRangePropertiesReset = false;
@@ -202,6 +210,8 @@ namespace RegExp
                     _latestTextRangePropertiesReset = false;
                 }
 
+                Debug.WriteLine($"END: _latestOffset: {_latestOffset}; LatestSymbolIndex: {LatestSymbolIndex}");
+
                 _previous = _current;
                 _isBeingChanged = false;
             }
@@ -210,19 +220,27 @@ namespace RegExp
         #region processing
         private void UpdateValues()
         {
+            var watch = new Stopwatch();
+
+            watch.Start();
+
             var foundRanges = _occurrencesFinder
                 .GetOccurrencesRanges(_currentRegex, updatePreviousCall: true)
                 .ToArray();
 
             if (foundRanges.Length > 0)
             {
-            _occurrencesHighlighter.Highlight(foundRanges, _currentRegex, continueWithPreviousColors: true);
-            _latestOffset = InputString.Document.ContentStart.GetOffsetToPosition(foundRanges.Last().Start) + 1;
+                _occurrencesHighlighter.Highlight(foundRanges, _currentRegex, continueWithPreviousColors: true);
+                _latestOffset = InputString.Document.ContentStart.GetOffsetToPosition(foundRanges.Last().Start) + 1;
             }
             else
             {
                 _latestOffset = -1;
             }
+
+            watch.Stop();
+
+            Debug.WriteLine($"watch: {{ElapsedTicks: {watch.ElapsedTicks}}} {{ElapsedMilliseconds: {watch.ElapsedMilliseconds}}}");
         }
         private void ResetValues()
         {
