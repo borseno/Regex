@@ -13,7 +13,7 @@ namespace RegExp
     class DocumentOccurrencesHighlighter
     {
         protected FlowDocument FlowDocument { get; }
-        protected int Index { get; private set; }
+        protected int Index { get; set; }
 
         public Brush DefaultBackground { get; set; }
         public Brush DefaultForeground { get; set; }
