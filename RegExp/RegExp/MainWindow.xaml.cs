@@ -117,11 +117,10 @@ namespace RegExp
             _regexProcessor = new RegexTextProcessor1Async(InputRegExp, Colors.Red);
         }
 
-        private async void OnTextChanged(object sender, TextChangedEventArgs e)
+        private void OnTextChanged(object sender, TextChangedEventArgs e)
         {
             if (!_isBeingChanged)
             {
-                //InputString.IsReadOnly = true;
 
                 _isBeingChanged = true;
 
@@ -131,12 +130,11 @@ namespace RegExp
                 }
                 catch (ArgumentException)
                 {
-                    await _regexProcessor.AddCurvyUnderlineAsync();
-                    _isBeingChanged = false;
+                    _regexProcessor.AddCurvyUnderlineAsync().ContinueWith(t => { _isBeingChanged = false; });
                     return;
                 }
 
-                await _regexProcessor.ResetRegexPropertiesAsync();
+                _regexProcessor.ResetRegexPropertiesAsync();
 
                 _current = _currentRegex.Matches(Text).Cast<Match>().ToArray();
 
@@ -146,40 +144,64 @@ namespace RegExp
                 if (_current.LastOrDefault()?.Value.Length > 1 && _latestOffset != -1 && LatestSymbolIndex <= _latestOffset)
                 {
                     InputString.IsReadOnly = true;
-                    await ResetValuesAsync();
-                    InputString.IsReadOnly = false;
+                    ResetValuesAsync().ContinueWith((d) =>
+                    {
+                        Application.Current.Dispatcher.Invoke(
+                            () =>
+                            {
+                                _previous = _current;
+                                _isBeingChanged = false;
+                                InputString.IsReadOnly = false;
+                            });
+                    });
                 }
                 else if (_current.LastOrDefault()?.Value.Length == 1 && _latestOffset != -1 && LatestSymbolIndex < _latestOffset)
                 {
                     InputString.IsReadOnly = true;
-                    await ResetValuesAsync();
-                    InputString.IsReadOnly = false;
+                    ResetValuesAsync().ContinueWith((d) =>
+                    {
+                        Application.Current.Dispatcher.Invoke(
+                            () =>
+                            {
+                                _previous = _current;
+                                _isBeingChanged = false;
+                                InputString.IsReadOnly = false;
+                            });
+                    });
                 }
                 else if (_current.LastOrDefault()?.Index + _current.LastOrDefault()?.Length != Text.Length - symbolsToRemove &&
                     previousIsCurrent)
                 {
-                    InputString.IsReadOnly = true;
                     ResetLatestInputProperties();
-                    InputString.IsReadOnly = false;
+                    _previous = _current;
+                    _isBeingChanged = false;
                 }
                 else if (_current.ContainsInStart(_previous) && _current.Length > _previous.Length)
                 {
-                    InputString.IsReadOnly = true;
                     ResetLatestInputProperties();
                     UpdateValues();
-                    InputString.IsReadOnly = false;
+                    _previous = _current;
+                    _isBeingChanged = false;
                 }
                 else if (!previousIsCurrent)
                 {
                     InputString.IsReadOnly = true;
-                    await ResetValuesAsync();
-                    InputString.IsReadOnly = false;
+                    ResetValuesAsync().ContinueWith((d) =>
+                    {
+                        Application.Current.Dispatcher.Invoke(
+                            () =>
+                            {
+                                _previous = _current;
+                                _isBeingChanged = false;
+                                InputString.IsReadOnly = false;
+                            });
+                    });
                 }
-
-                _previous = _current;
-                _isBeingChanged = false;
-
-                //InputString.IsReadOnly = false;
+                else
+                {
+                    _isBeingChanged = false;
+                    _previous = _current;
+                }
             }
         }
 
