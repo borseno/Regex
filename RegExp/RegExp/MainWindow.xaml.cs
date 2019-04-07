@@ -1,21 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Text.RegularExpressions;
-using System.Windows.Controls.Primitives;
 
 namespace RegExp
 {
@@ -130,11 +121,16 @@ namespace RegExp
                 }
                 catch (ArgumentException)
                 {
-                    _regexProcessor.AddCurvyUnderlineAsync().ContinueWith(t => { _isBeingChanged = false; });
+                    _regexProcessor.AddCurvyUnderlineAsync().ContinueWith
+                        (t =>
+                    {
+                        Dispatcher.Invoke(_occurrencesHighlighter.ResetTextProperties);
+                        _isBeingChanged = false;
+                    });
                     return;
                 }
 
-                _regexProcessor.ResetRegexPropertiesAsync();
+                _regexProcessor.ResetRegexProperties();
 
                 _current = _currentRegex.Matches(Text).Cast<Match>().ToArray();
 
@@ -196,6 +192,7 @@ namespace RegExp
                                 InputString.IsReadOnly = false;
                             });
                     });
+
                 }
                 else
                 {
