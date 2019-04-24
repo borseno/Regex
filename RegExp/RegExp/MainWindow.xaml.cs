@@ -15,7 +15,8 @@ namespace RegExp
         private readonly DocumentOccurrencesFinder _occurrencesFinder;
         private readonly DocumentOccurrencesHighlighter1Async _occurrencesHighlighter;
         private readonly RegexTextProcessor1Async _regexProcessor;
-        private bool _isBeingChanged;
+
+        private string _previousText;
         private Match[] _previous;
         private Match[] _current;
         private Regex _currentRegex;
@@ -46,6 +47,8 @@ namespace RegExp
                 return InputString.Document.ContentStart.GetOffsetToPosition(LatestSymbol?.Start);
             }
         }
+
+        private bool TextChanged => _previousText != Text;
 
         public MainWindow()
         {
@@ -106,14 +109,15 @@ namespace RegExp
             #endregion
 
             _regexProcessor = new RegexTextProcessor1Async(InputRegExp, Colors.Red);
+
+            _previousText = Text;
         }
 
         private void OnTextChanged(object sender, TextChangedEventArgs e)
         {
-            if (!_isBeingChanged)
+            if (TextChanged)
             {
-
-                _isBeingChanged = true;
+                _previousText = Text;
 
                 try
                 {
@@ -125,7 +129,6 @@ namespace RegExp
                         (t =>
                     {
                         Dispatcher.Invoke(_occurrencesHighlighter.ResetTextProperties);
-                        _isBeingChanged = false;
                     });
                     return;
                 }
@@ -145,8 +148,7 @@ namespace RegExp
                         Application.Current.Dispatcher.Invoke(
                             () =>
                             {
-                                _previous = _current;
-                                _isBeingChanged = false;
+                                _previous = _current;                            
                                 InputString.IsReadOnly = false;
                             });
                     });
@@ -160,7 +162,6 @@ namespace RegExp
                             () =>
                             {
                                 _previous = _current;
-                                _isBeingChanged = false;
                                 InputString.IsReadOnly = false;
                             });
                     });
@@ -170,14 +171,12 @@ namespace RegExp
                 {
                     ResetLatestInputProperties();
                     _previous = _current;
-                    _isBeingChanged = false;
                 }
                 else if (_current.ContainsInStart(_previous) && _current.Length > _previous.Length)
                 {
                     ResetLatestInputProperties();
                     UpdateValues();
                     _previous = _current;
-                    _isBeingChanged = false;
                 }
                 else if (!previousIsCurrent)
                 {
@@ -188,7 +187,6 @@ namespace RegExp
                             () =>
                             {
                                 _previous = _current;
-                                _isBeingChanged = false;
                                 InputString.IsReadOnly = false;
                             });
                     });
@@ -196,7 +194,6 @@ namespace RegExp
                 }
                 else
                 {
-                    _isBeingChanged = false;
                     _previous = _current;
                 }
             }
