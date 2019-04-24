@@ -7,6 +7,12 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
 using System.Text.RegularExpressions;
+using RegExp.Brushes_Logic;
+using RegExp.Extensions;
+using RegExp.HelperClasses;
+using RegExp.OccurrencesHighlighting;
+using RegExp.PatternProcessing;
+using RegExp.TextProcessing;
 
 namespace RegExp
 {
@@ -17,6 +23,7 @@ namespace RegExp
         private readonly RegexTextProcessor1Async _regexProcessor;
 
         private string _previousText;
+        private string _previousPattern;
         private Match[] _previous;
         private Match[] _current;
         private Regex _currentRegex;
@@ -49,6 +56,8 @@ namespace RegExp
         }
 
         private bool TextChanged => _previousText != Text;
+
+        private bool PatternChanged => _previousPattern != RegExpValue;
 
         public MainWindow()
         {
@@ -111,13 +120,15 @@ namespace RegExp
             _regexProcessor = new RegexTextProcessor1Async(InputRegExp, Colors.Red);
 
             _previousText = Text;
+            _previousPattern = RegExpValue;
         }
 
-        private void OnTextChanged(object sender, TextChangedEventArgs e)
+        private async void OnTextChanged(object sender, TextChangedEventArgs e)
         {
-            if (TextChanged)
+            if (TextChanged || PatternChanged)
             {
                 _previousText = Text;
+                _previousPattern = RegExpValue;
 
                 try
                 {
@@ -125,11 +136,9 @@ namespace RegExp
                 }
                 catch (ArgumentException)
                 {
-                    _regexProcessor.AddCurvyUnderlineAsync().ContinueWith
-                        (t =>
-                    {
-                        Dispatcher.Invoke(_occurrencesHighlighter.ResetTextProperties);
-                    });
+                    await _regexProcessor.AddCurvyUnderlineAsync();
+                    _occurrencesHighlighter.ResetTextProperties();
+                                
                     return;
                 }
 
@@ -142,68 +151,33 @@ namespace RegExp
 
                 if (_current.LastOrDefault()?.Value.Length > 1 && _latestOffset != -1 && LatestSymbolIndex <= _latestOffset)
                 {
-                    InputString.IsReadOnly = true;
-                    ResetValuesAsync().ContinueWith((d) =>
-                    {
-                        Application.Current.Dispatcher.Invoke(
-                            () =>
-                            {
-                                _previous = _current;                            
-                                InputString.IsReadOnly = false;
-                            });
-                    });
+                    await ResetValuesAsync();
                 }
                 else if (_current.LastOrDefault()?.Value.Length == 1 && _latestOffset != -1 && LatestSymbolIndex < _latestOffset)
                 {
-                    InputString.IsReadOnly = true;
-                    ResetValuesAsync().ContinueWith((d) =>
-                    {
-                        Application.Current.Dispatcher.Invoke(
-                            () =>
-                            {
-                                _previous = _current;
-                                InputString.IsReadOnly = false;
-                            });
-                    });
+                    await ResetValuesAsync();
                 }
                 else if (_current.LastOrDefault()?.Index + _current.LastOrDefault()?.Length != Text.Length - symbolsToRemove &&
                     previousIsCurrent)
                 {
                     ResetLatestInputProperties();
-                    _previous = _current;
                 }
                 else if (_current.ContainsInStart(_previous) && _current.Length > _previous.Length)
                 {
                     ResetLatestInputProperties();
                     UpdateValues();
-                    _previous = _current;
                 }
                 else if (!previousIsCurrent)
                 {
-                    InputString.IsReadOnly = true;
-                    ResetValuesAsync().ContinueWith((d) =>
-                    {
-                        Application.Current.Dispatcher.Invoke(
-                            () =>
-                            {
-                                _previous = _current;
-                                InputString.IsReadOnly = false;
-                            });
-                    });
-
+                    await ResetValuesAsync();
                 }
-                else
-                {
-                    _previous = _current;
-                }
+                _previous = _current;
             }
         }
 
         #region processing
         private async Task UpdateValuesAsync()
         {
-            Debug.WriteLine("UpdateValuesAsync()");
-
             var foundRanges = _occurrencesFinder
                 .GetOccurrencesRanges(_currentRegex, updatePreviousCall: true)
                 .ToArray();
@@ -240,7 +214,7 @@ namespace RegExp
 
         private async Task ResetValuesAsync()
         {
-            Debug.WriteLine("ResetValuesAsync()");
+            InputString.IsReadOnly = true;
 
             await _occurrencesHighlighter.ResetTextPropertiesAsync();
 
@@ -258,6 +232,8 @@ namespace RegExp
                 _latestOffset = -1;
             }
 
+            _previous = _current;
+            InputString.IsReadOnly = false;
         }
 
         private void ResetValues()
