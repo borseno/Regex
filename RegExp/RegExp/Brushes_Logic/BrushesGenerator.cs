@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Windows.Media;
 
-namespace RegExp
+namespace RegExp.Brushes_Logic
 {
     public static class BrushesGenerator
     {

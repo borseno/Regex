@@ -1,10 +1,9 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Documents;
 
-namespace RegExp
+namespace RegExp.TextProcessing
 {
     class DocumentOccurrencesFinder
     {

@@ -57,15 +57,17 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="DocumentOccurrencesFinder.cs" />
-    <Compile Include="DocumentOccurrencesHighlighter.cs" />
-    <Compile Include="DocumentOccurrencesHighlighter1.cs" />
-    <Compile Include="BrushesGenerator.cs" />
-    <Compile Include="MatchesArrayExtension.cs" />
-    <Compile Include="MatchesComparer.cs" />
-    <Compile Include="RegexTextProcessor.cs" />
-    <Compile Include="RegexTextProcessor1.cs" />
-    <Compile Include="StringExtension.cs" />
+    <Compile Include="Brushes_Logic\BrushesGenerator.cs" />
+    <Compile Include="Extensions\MatchesArrayExtensions.cs" />
+    <Compile Include="Extensions\StringExtension.cs" />
+    <Compile Include="HelperClasses\MatchesComparer.cs" />
+    <Compile Include="OccurrencesHighlighting\DocumentOccurrencesHighlighter.cs" />
+    <Compile Include="OccurrencesHighlighting\DocumentOccurrencesHighlighter1.cs" />
+    <Compile Include="OccurrencesHighlighting\DocumentOccurrencesHighlighter1Async.cs" />
+    <Compile Include="PatternProcessing\RegexTextProcessor.cs" />
+    <Compile Include="PatternProcessing\RegexTextProcessor1.cs" />
+    <Compile Include="PatternProcessing\RegexTextProcessor1Async.cs" />
+    <Compile Include="TextProcessing\DocumentOccurrencesFinder.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

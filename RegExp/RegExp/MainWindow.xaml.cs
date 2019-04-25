@@ -1,34 +1,32 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Text.RegularExpressions;
-using System.Windows.Controls.Primitives;
+using RegExp.Brushes_Logic;
+using RegExp.Extensions;
+using RegExp.HelperClasses;
+using RegExp.OccurrencesHighlighting;
+using RegExp.PatternProcessing;
+using RegExp.TextProcessing;
 
 namespace RegExp
 {
     partial class MainWindow : Window
     {
         private readonly DocumentOccurrencesFinder _occurrencesFinder;
-        private readonly DocumentOccurrencesHighlighter1 _occurrencesHighlighter;
-        private readonly RegexTextProcessor1 _regexProcessor;
-        private bool _isBeingChanged;
+        private readonly DocumentOccurrencesHighlighter1Async _occurrencesHighlighter;
+        private readonly RegexTextProcessor1Async _regexProcessor;
+
+        private string _previousText;
+        private string _previousPattern;
         private Match[] _previous;
         private Match[] _current;
         private Regex _currentRegex;
-        private bool _latestTextRangePropertiesReset;
         private int _latestOffset;
 
         private string RegExpValue => InputRegExp.Text;
@@ -57,39 +55,9 @@ namespace RegExp
             }
         }
 
-        private bool LatestTextRangeResetRequired
-        {
-            // TODO: Optimize this
-            get
-            {
-                var currentCaret = InputString.CaretPosition;
-                var behindCurrentCaret = InputString.CaretPosition.GetPositionAtOffset(-1);
+        private bool TextChanged => _previousText != Text;
 
-                if (behindCurrentCaret == null)
-                    return false;
-
-                var prop =
-                    new TextRange(behindCurrentCaret, currentCaret)
-                        .GetPropertyValue(TextElement.ForegroundProperty);
-
-                var anotherRTB = new RichTextBox();
-
-                var emptyRange =
-                    new TextRange(
-                        anotherRTB.Document.ContentStart,
-                        anotherRTB.Document.ContentEnd
-                        );
-                emptyRange.ApplyPropertyValue(TextElement.ForegroundProperty, _occurrencesHighlighter.DefaultForeground);
-
-                var prop1 = emptyRange.GetPropertyValue(TextElement.ForegroundProperty);
-
-                bool result = !Equals(prop, prop1);
-
-                Debug.WriteLine("LatestTextRangeResetRequired result: " + result);
-
-                return result;
-            }
-        }
+        private bool PatternChanged => _previousPattern != RegExpValue;
 
         public MainWindow()
         {
@@ -141,7 +109,7 @@ namespace RegExp
                 #endregion
 
                 _occurrencesHighlighter =
-                    new DocumentOccurrencesHighlighter1(
+                    new DocumentOccurrencesHighlighter1Async(
                         InputString.Document,
                         defaultBack, defaultFore,
                         foregroundHighlightingBrushes, backgroundHighlightingBrushes
@@ -149,14 +117,18 @@ namespace RegExp
             }
             #endregion
 
-            _regexProcessor = new RegexTextProcessor1(InputRegExp, Colors.Red);
+            _regexProcessor = new RegexTextProcessor1Async(InputRegExp, Colors.Red);
+
+            _previousText = Text;
+            _previousPattern = RegExpValue;
         }
 
-        private void OnTextChanged(object sender, TextChangedEventArgs e)
+        private async void OnTextChanged(object sender, TextChangedEventArgs e)
         {
-            if (!_isBeingChanged)
+            if (TextChanged || PatternChanged)
             {
-                _isBeingChanged = true;
+                _previousText = Text;
+                _previousPattern = RegExpValue;
 
                 try
                 {
@@ -164,51 +136,47 @@ namespace RegExp
                 }
                 catch (ArgumentException)
                 {
-                    _regexProcessor.AddCurvyUnderline();
-                    _isBeingChanged = false;
+                    await _regexProcessor.AddCurvyUnderlineAsync();
+                    _occurrencesHighlighter.ResetTextProperties();
+                                
                     return;
                 }
+
                 _regexProcessor.ResetRegexProperties();
 
                 _current = _currentRegex.Matches(Text).Cast<Match>().ToArray();
 
-                // TODO: 1. Optimize case when changing the text after already highlighted text.
-                // TODO:    Not to reset the whole text, but update.
-
                 bool previousIsCurrent = MatchesComparer.Equals(_current, _previous);
                 const int symbolsToRemove = 2;
 
-                if (_latestOffset != -1 && LatestSymbolIndex <= _latestOffset)
+                if (_current.LastOrDefault()?.Value.Length > 1 && _latestOffset != -1 && LatestSymbolIndex <= _latestOffset)
                 {
-                    ResetValues();
-                    _latestTextRangePropertiesReset = false;
+                    await ResetValuesAsync();
+                }
+                else if (_current.LastOrDefault()?.Value.Length == 1 && _latestOffset != -1 && LatestSymbolIndex < _latestOffset)
+                {
+                    await ResetValuesAsync();
                 }
                 else if (_current.LastOrDefault()?.Index + _current.LastOrDefault()?.Length != Text.Length - symbolsToRemove &&
-                    previousIsCurrent &&
-                    (!_latestTextRangePropertiesReset || LatestTextRangeResetRequired))
+                    previousIsCurrent)
                 {
                     ResetLatestInputProperties();
-                    _latestTextRangePropertiesReset = true;
                 }
                 else if (_current.ContainsInStart(_previous) && _current.Length > _previous.Length)
                 {
                     ResetLatestInputProperties();
                     UpdateValues();
-                    _latestTextRangePropertiesReset = false;
                 }
                 else if (!previousIsCurrent)
                 {
-                    ResetValues();
-                    _latestTextRangePropertiesReset = false;
+                    await ResetValuesAsync();
                 }
-
                 _previous = _current;
-                _isBeingChanged = false;
             }
         }
 
         #region processing
-        private void UpdateValues()
+        private async Task UpdateValuesAsync()
         {
             var foundRanges = _occurrencesFinder
                 .GetOccurrencesRanges(_currentRegex, updatePreviousCall: true)
@@ -216,24 +184,69 @@ namespace RegExp
 
             if (foundRanges.Length > 0)
             {
-            _occurrencesHighlighter.Highlight(foundRanges, _currentRegex, continueWithPreviousColors: true);
-            _latestOffset = InputString.Document.ContentStart.GetOffsetToPosition(foundRanges.Last().Start) + 1;
+                await _occurrencesHighlighter.HighlightAsync(foundRanges, _currentRegex, continueWithPreviousColors: true);
+                _latestOffset = InputString.Document.ContentStart.GetOffsetToPosition(foundRanges.Last().Start) + 1;
             }
             else
             {
                 _latestOffset = -1;
             }
         }
+
+        private void UpdateValues()
+        {
+            Debug.WriteLine("UpdateValues()");
+
+            var foundRanges = _occurrencesFinder
+                .GetOccurrencesRanges(_currentRegex, updatePreviousCall: true)
+                .ToArray();
+
+            if (foundRanges.Length > 0)
+            {
+                _occurrencesHighlighter.Highlight(foundRanges, _currentRegex, continueWithPreviousColors: true);
+                _latestOffset = InputString.Document.ContentStart.GetOffsetToPosition(foundRanges.Last().Start) + 1;
+            }
+            else
+            {
+                _latestOffset = -1;
+            }
+        }
+
+        private async Task ResetValuesAsync()
+        {
+            InputString.IsReadOnly = true;
+            InputRegExp.IsReadOnly = true;
+
+            await _occurrencesHighlighter.ResetTextPropertiesAsync();
+
+            var foundRanges = _occurrencesFinder
+                .GetOccurrencesRanges(_currentRegex)
+                .ToArray();
+
+            if (foundRanges.Length > 0)
+            {
+                await _occurrencesHighlighter.HighlightAsync(foundRanges, _currentRegex);
+                _latestOffset = InputString.Document.ContentStart.GetOffsetToPosition(foundRanges.Last().Start) + 1;
+            }
+            else
+            {
+                _latestOffset = -1;
+            }
+
+            _previous = _current;
+            InputString.IsReadOnly = false;
+            InputRegExp.IsReadOnly = false;
+        }
+
         private void ResetValues()
         {
-            Debug.WriteLine("Reset is called");
+            Debug.WriteLine("ResetValues()");
 
             _occurrencesHighlighter.ResetTextProperties();
 
             var foundRanges = _occurrencesFinder
                 .GetOccurrencesRanges(_currentRegex)
                 .ToArray();
-
 
             if (foundRanges.Length > 0)
             {
@@ -247,6 +260,11 @@ namespace RegExp
 
         }
         #endregion
+
+        private async Task ResetLatestInputPropertiesAsync()
+        {
+            await _occurrencesHighlighter.ResetTextPropertiesAsync(LatestSymbol);
+        }
 
         private void ResetLatestInputProperties()
         {

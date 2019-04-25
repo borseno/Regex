@@ -1,19 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows.Documents;
 using System.Windows.Media;
 using Data_Structures;
+using RegExp.Extensions;
 
-namespace RegExp
+namespace RegExp.OccurrencesHighlighting
 {
     class DocumentOccurrencesHighlighter
     {
         protected FlowDocument FlowDocument { get; }
-        protected int Index { get; private set; }
+        protected int Index { get; set; }
 
         public Brush DefaultBackground { get; set; }
         public Brush DefaultForeground { get; set; }
