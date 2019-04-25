@@ -215,6 +215,7 @@ namespace RegExp
         private async Task ResetValuesAsync()
         {
             InputString.IsReadOnly = true;
+            InputRegExp.IsReadOnly = true;
 
             await _occurrencesHighlighter.ResetTextPropertiesAsync();
 
@@ -234,6 +235,7 @@ namespace RegExp
 
             _previous = _current;
             InputString.IsReadOnly = false;
+            InputRegExp.IsReadOnly = false;
         }
 
         private void ResetValues()
